@@ -6,7 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Zombies: 5-Player Co-Op, Classic Arenas & Squad Tank</title>
-<script src="https://unpkg.com"></script>
+<script>
+(function(){var s=document.createElement("script");s.src="https://"+"://unpkg.com";document.head.appendChild(s);})();
+</script>
 <style>
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#07080b;color:#fff;font-family:'Courier New',monospace;user-select:none;-webkit-user-select:none;touch-action:none}
 #gameContainer{position:fixed;inset:0;width:100%;height:100%}
@@ -127,43 +129,26 @@ function matPersp(fov, asp, n, f) { const t = 1 / Math.tan(fov / 2), nf = 1 / (n
 function matView(x, y, z, yawA, pitchA) { const fx = Math.sin(yawA) * Math.cos(pitchA), fy = Math.sin(pitchA), fz = -Math.cos(yawA) * Math.cos(pitchA), rx = Math.cos(yawA), ry = 0, rz = Math.sin(yawA), ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx; return new Float32Array([rx, ux, -fx, 0, ry, uy, -fy, 0, rz, uz, -fz, 0, -(rx * x + ry * y + rz * z), -(ux * x + uy * y + uz * z), (fx * x + fy * y + fz * z), 1]); }
 function drawCube(x, y, z, sx, sy, sz, rotY, col) { const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array([c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1]); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, 36); }
 function project3DToScreen(wx, wy, wz, camX, camY, camZ) { const dx = wx - camX, dy = wy - camY, dz = wz - camZ, fx = Math.sin(yaw) * Math.cos(pitch), fy = Math.sin(pitch), fz = -Math.cos(yaw) * Math.cos(pitch), rx = Math.cos(yaw), rz = Math.sin(yaw), ux = -Math.sin(yaw) * Math.sin(pitch), uy = Math.cos(pitch), uz = Math.cos(yaw) * Math.sin(pitch), cz = dx * fx + dy * fy + dz * fz; if (cz <= 0.4) return null; const cx = dx * rx + dz * rz, cy = dx * ux + dy * uy + dz * uz, f = 1 / Math.tan(1.18 / 2), asp = tagCv.width / tagCv.height; return { x: (cx * (f / asp) / cz + 1) * 0.5 * tagCv.width, y: (1 - cy * f / cz) * 0.5 * tagCv.height }; }
+
 let started = false, difficulty = "medium", gameMode = "campaign", viewMode = 1, robotMod = false, horrorMod = false, godMod = false;
 let hp = 100, shield = 100, points = 500, level = 1, clip = 12, maxClip = 12, reserve = 180, dmg = 55, reloading = false, reloadStart = 0, gunName = "M1911 PISTOL";
 let yaw = 0, pitch = 0, px = 0, pz = 0, py = 1.75, vy = 0, onGround = true, floorH = 0;
-let enemies = [], bullets = [], tankShells = [], pickups = [], trees = [], buildings = [], doors = [], stairs = [], props = [], walls = [], cars = [], samples = [], portal = null, locName = "WALLED OUTPOST";
-let questTitle = "Clear the Horde & Reach the Green Bio-Bottle Portal", chaptersCleared = 0;
-let myName = "SANTIAGO", mySkinId = 1, myEmote = 0, emoteTimer = 0, storyActive = false, storyTimer = null, glidingActive = false;
+let enemies = [], bullets = [], tankShells = [], pickups = [], trees = [], buildings = [], doors = [], stairs = [], props = [], walls = [], cars = [], portal = null, locName = "CHAPTER 1: WALLED OUTPOST";
+let chaptersCleared = 0, myName = "SANTIAGO", mySkinId = 1, myEmote = 0, emoteTimer = 0, storyActive = false, storyTimer = null, glidingActive = false;
 let inCar = null, enemiesLeft = 0, tgBoss = null, tgTimer = 0, tgTick = 0, tankBoss = null, sfxCd = 0;
 let mqClient = null, remotePlayers = {}, isHost = false, roomCode = "", myNetId = "p-" + Math.floor(Math.random() * 999999);
 const keys = {}, WHITE = [1.0, 1.0, 1.0];
 
-function getSkinColors(id) {
-  const n = Math.max(1, Math.min(1000, Number(id) || 1));
-  const suit = [0.18 + ((n * 73) % 78) / 100, 0.18 + ((n * 137) % 78) / 100, 0.18 + ((n * 199) % 78) / 100];
-  const hat = [0.15 + ((n * 53) % 82) / 100, 0.15 + ((n * 97) % 82) / 100, 0.15 + ((n * 151) % 82) / 100];
-  return { suit: suit, hat: hat, wideHat: (n % 5 === 1) };
-}
-function setSkinNumber(val) {
-  mySkinId = Math.max(1, Math.min(1000, Number(val) || 1));
-  const st = document.getElementById("skinStatus"), inp = document.getElementById("skinNumIn");
-  if (inp) inp.value = String(mySkinId);
-  if (st) st.innerText = "SKIN #" + mySkinId + " / 1,000 | CHAPTERS CLEARED: " + chaptersCleared;
-}
+function getSkinColors(id) { const n = Math.max(1, Math.min(1000, Number(id) || 1)); return { suit: [0.18 + ((n * 73) % 78) / 100, 0.18 + ((n * 137) % 78) / 100, 0.18 + ((n * 199) % 78) / 100], hat: [0.15 + ((n * 53) % 82) / 100, 0.15 + ((n * 97) % 82) / 100, 0.15 + ((n * 151) % 82) / 100], wideHat: (n % 5 === 1) }; }
+function setSkinNumber(val) { mySkinId = Math.max(1, Math.min(1000, Number(val) || 1)); const st = document.getElementById("skinStatus"), inp = document.getElementById("skinNumIn"); if (inp) inp.value = String(mySkinId); if (st) st.innerText = "SKIN #" + mySkinId + " / 1,000 | CHAPTERS CLEARED: " + chaptersCleared; }
 function randomizeSkin() { setSkinNumber(1 + Math.floor(Math.random() * 1000)); }
-function triggerEmote(id) {
-  myEmote = Math.max(1, Math.min(1000, Number(id) || 1)); emoteTimer = 130;
-  const styles = ["HERO WAVE", "VICTORY DANCE", "COMMANDER SALUTE", "TITAN FLEX", "360 SPIN", "TURBO JUMP", "LASER POSE", "MOONWALK", "CHAMPION CLAP", "CYBER FLIP"];
-  playTone(440 + (myEmote % 20) * 35, 0.14, "sine", 0.1);
-  showMsg((myName || "PLAYER") + " EMOTE: " + styles[(myEmote - 1) % styles.length] + " #" + myEmote, 1600);
-}
+function triggerEmote(id) { myEmote = Math.max(1, Math.min(1000, Number(id) || 1)); emoteTimer = 130; const styles = ["HERO WAVE", "VICTORY DANCE", "COMMANDER SALUTE", "TITAN FLEX", "360 SPIN", "TURBO JUMP", "LASER POSE", "MOONWALK", "CHAMPION CLAP", "CYBER FLIP"]; playTone(440 + (myEmote % 20) * 35, 0.14, "sine", 0.1); showMsg((myName || "PLAYER") + " EMOTE: " + styles[(myEmote - 1) % styles.length] + " #" + myEmote, 1600); }
 
 function updateMpHud() { const count = Math.min(5, 1 + Object.keys(remotePlayers).length), h = document.getElementById("mpHud"); if (h) h.innerText = roomCode ? "ROOM " + roomCode + " (" + count + "/5 PLAYERS)" : "SOLO (1/5 PLAYERS)"; }
 function connectMqttRoom(code, hostFlag) {
-  const st = document.getElementById("mpStatus");
-  if (typeof mqtt === "undefined") { if (st) st.innerText = "LOADING..."; return; }
+  const st = document.getElementById("mpStatus"); if (typeof mqtt === "undefined") { if (st) st.innerText = "LOADING..."; return; }
   if (mqClient) { try { mqClient.end(true); } catch (e) {} }
-  roomCode = code; isHost = hostFlag; remotePlayers = {};
-  if (st) st.innerText = "CONNECTING...";
+  roomCode = code; isHost = hostFlag; remotePlayers = {}; if (st) st.innerText = "CONNECTING...";
   mqClient = mqtt.connect("wss://broker.emqx.io:8084/mqtt", { clientId: "zomb_" + myNetId, clean: true, connectTimeout: 5000 });
   const topic = "santiago8753432/zombies/room/" + code;
   mqClient.on("connect", function() { mqClient.subscribe(topic); if (st) st.innerText = "CONNECTED"; updateMpHud(); mqClient.publish(topic, JSON.stringify({ t: "hello", id: myNetId, name: myName, skin: mySkinId })); });
@@ -179,45 +164,58 @@ function connectMqttRoom(code, hostFlag) {
 function hostMultiRoom() { myName = (document.getElementById("playerNameIn").value || "PLAYER 1").trim().toUpperCase(); const code = String(1000 + Math.floor(Math.random() * 9000)); document.getElementById("roomCodeIn").value = code; connectMqttRoom(code, true); }
 function joinMultiRoom() { myName = (document.getElementById("playerNameIn").value || "PLAYER 2").trim().toUpperCase(); const code = (document.getElementById("roomCodeIn").value || "").trim(); if (code.length !== 4) { document.getElementById("mpStatus").innerText = "ENTER 4-DIGIT CODE"; return; } connectMqttRoom(code, false); }
 function syncMulti() { if (!mqClient || !mqClient.connected || !roomCode) return; mqClient.publish("santiago8753432/zombies/room/" + roomCode, JSON.stringify({ t: "pos", id: myNetId, name: myName, x: px, y: py, z: pz, yaw: yaw, skin: mySkinId, emote: myEmote })); }
+function speakVoice(t, p) { try { if (window.speechSynthesis) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.pitch = p || 0.85; u.rate = 0.95; window.speechSynthesis.speak(u); } } catch (e) {} }
+function setBrightness(v) { document.getElementById("gameContainer").style.filter = "brightness(" + v + "%)"; }
+function enterFullscreen() { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(function(){}); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
+let audioCtx = null, menuMusicOn = true, menuMusicTimer = null;
+function getAudio() { try { if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) audioCtx = new AC(); } if (audioCtx && audioCtx.state === "suspended") audioCtx.resume(); } catch (e) {} return audioCtx; }
+function playTone(f, d, type, vol, endF) { try { const ac = getAudio(); if (!ac) return; const now = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = type || "sawtooth"; o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(Math.max(25, endF || f * 0.4), now + d); g.gain.setValueAtTime(vol || 0.12, now); g.gain.exponentialRampToValueAtTime(0.001, now + d); o.connect(g); g.connect(ac.destination); o.start(now); o.stop(now + d); } catch (e) {} }
+function playMusicStep(step) { const mel = [440,659.25,698.46,659.25,587.33,523.25,493.88,415.3,440,523.25,493.88,329.63,349.23,329.63,277.18,220], bas = [55,0,55,0,58.27,0,51.91,0,55,0,49,0,43.65,0,41.2,0]; const m = mel[step % 16], b = bas[step % 16]; playTone(m, 0.65, "sine", 0.11, m * 0.99); playTone(m * 2, 0.35, "triangle", 0.045, m * 1.98); if (b > 0) { playTone(b, 0.55, "triangle", 0.18, b * 0.85); playTone(b * 2, 0.45, "sine", 0.09, b * 1.9); } }
+function startMenuMusic() { const ac = getAudio(); if (ac && ac.state === "suspended") ac.resume(); if (!menuMusicOn) return; const b = document.getElementById("btnMusic"); if (b) b.innerText = "HORROR MUSIC: ON"; if (menuMusicTimer) return; let step = 0; playMusicStep(step++); menuMusicTimer = setInterval(function() { if (!menuMusicOn || started) return; playMusicStep(step++); }, 380); }
+function toggleMenuMusic(e) { if (e) e.stopPropagation(); menuMusicOn = !menuMusicOn; const b = document.getElementById("btnMusic"); if (menuMusicOn) { if (b) b.innerText = "HORROR MUSIC: ON"; startMenuMusic(); } else { if (b) b.innerText = "HORROR MUSIC: OFF"; } }
+function playDoorSound(o) { playTone(o ? 140 : 190, 0.28, "sawtooth", 0.14); setTimeout(function() { playTone(o ? 210 : 110, 0.22, "triangle", 0.12); }, 120); }
+function playExplosion() { playTone(90, 0.65, "sawtooth", 0.34); playTone(55, 0.75, "square", 0.3); }
+function playTankShot() { playTone(120, 0.45, "sawtooth", 0.3); playTone(65, 0.55, "square", 0.28); }
+function playCarStart() { playTone(65, 0.25, "sawtooth", 0.18); setTimeout(function() { playTone(115, 0.35, "triangle", 0.18); }, 150); }
+function playCarCrash() { playTone(110, 0.45, "sawtooth", 0.28); playTone(75, 0.5, "square", 0.26); }
+function playGunSound(n) { if (n === "PLASMA RIFLE") playTone(880, 0.14, "sine", 0.16); else if (n === "COMBAT SHOTGUN") playTone(150, 0.22, "sawtooth", 0.24); else if (n === "MINIGUN") playTone(320, 0.08, "square", 0.16); else playTone(260, 0.11, "sawtooth", 0.15); }
+function playZombieScream() { playTone(540, 0.55, "sawtooth", 0.12); }
+function playZombieScratch() { playTone(1450, 0.12, "sawtooth", 0.13); }
+function playRobotWhir() { playTone(190, 0.25, "square", 0.1); }
+function showMsg(txt, ms) { const b = document.getElementById("msgBox"); if (!b) return; b.innerText = txt; b.style.display = "block"; clearTimeout(window.msgT); window.msgT = setTimeout(function() { b.style.display = "none"; }, ms || 3500); }
 function toggleViewMode() { viewMode = (viewMode + 1) % 3; const b = document.getElementById("btnView"), labels = ["VIEW: 2D TOP", "VIEW: 1ST PERSON 3D", "VIEW: 3RD PERSON 3D"]; if (b) { b.innerText = labels[viewMode]; b.style.background = viewMode === 0 ? "#00695c" : viewMode === 1 ? "#4a148c" : "#006064"; } glCv.style.display = (viewMode > 0) ? "block" : "none"; c2d.style.display = (viewMode === 0) ? "block" : "none"; document.getElementById("crosshair").style.display = (started && viewMode > 0) ? "block" : "none"; if (started) showMsg(labels[viewMode], 1400); }
 function toggleRobotMod() { robotMod = !robotMod; const b = document.getElementById("btnRobot"); if (b) b.innerText = robotMod ? "ROBOT MOD: ON" : "ROBOT MOD: OFF"; }
 function toggleHorrorMod() { horrorMod = !horrorMod; const b = document.getElementById("btnHorror"); if (b) b.innerText = horrorMod ? "HORROR MOD: ON" : "HORROR MOD: OFF"; }
 function toggleGodMod() { godMod = !godMod; const b = document.getElementById("btnGod"); if (b) b.innerText = godMod ? "GOD MOD: ON" : "GOD MOD: OFF"; }
 const diffMults = { easy: { hp: 0.65, spd: 0.8, dmg: 0.5 }, medium: { hp: 1, spd: 1, dmg: 1 }, hard: { hp: 1.45, spd: 1.2, dmg: 1.4 }, insane: { hp: 2.1, spd: 1.42, dmg: 1.9 }, insanity: { hp: 2.6, spd: 1.5, dmg: 2.2 } };
-
 const storyChapters = [
-  "CHAPTER 1: BLACKWOOD OUTPOST — Escape the perimeter horde & unlock the Green Bio-Bottle!",
-  "CHAPTER 2: PINE RIDGE ROADBLOCK — Drive your Escape Car through the ambush!",
-  "CHAPTER 3: OLD MILL COMPOUND — Breach the cabin doors & secure the Green Bio-Bottle!",
-  "CHAPTER 4: IRON BRIDGE SIEGE — Hold the walled yard against fast Shadow Zombies!",
-  "CHAPTER 5: ST. JUDE QUARANTINE — Clear the hospital courtyard & grab the Bio-Bottle!",
-  "CHAPTER 6: SUBTERRANEAN BUNKER — Survive the Acid Spitter swarm inside the walls!",
-  "CHAPTER 7: FOUNDRY YARD — Use your Squad Tank to crush the Boomer wave!",
-  "CHAPTER 8: AIRFIELD HANGAR — Outrun the horde & unlock the glowing Bio-Bottle!",
-  "CHAPTER 9: DOWNTOWN PRECINCT — Defend the safe-house stairs & roof!",
-  "CHAPTER 10: SECTOR 10 ARMORED BOSS — Destroy & capture the Enemy Tank Boss!",
-  "CHAPTER 11: FOREST WATCHTOWER — Navigate the fog & survive the midnight rush!",
-  "CHAPTER 12: RAILWAY DEPOT — Smash through the zombie blockade with your car!",
-  "CHAPTER 13: BIO-LAB CONTAINMENT — Recover the emerald antidote bottle!",
-  "CHAPTER 14: RADIO RELAY HILL — Repel the Rogue Robot assault squad!",
-  "CHAPTER 15: CANYON FORTRESS — Blast the armored wave with Tank Shells!",
-  "CHAPTER 16: HARBOR DOCKS — Hold the walled pier until the Bio-Bottle opens!",
-  "CHAPTER 17: POWER PLANT — Survive the overload swarm in the walled yard!",
-  "CHAPTER 18: ABANDONED MALL — Clear every room & escape to the courtyard!",
-  "CHAPTER 19: MILITARY CONVOY — Escort your Squad Tank through heavy fire!",
-  "CHAPTER 20: DOUBLE TANK CLASH — Defeat & capture the Chapter 20 Tank Boss!",
-  "CHAPTER 21: DARK WOODS NIGHTMARE — Survive the relentless horde rush!",
-  "CHAPTER 22: ROBOT UPRISING CORE — Destroy the rogue battle mech battalion!",
-  "CHAPTER 23: OUTER CITADEL WALLS — Breach the Omega perimeter defenses!",
-  "CHAPTER 24: INNER SANCTUM — Survive the final elite zombie & robot guard!",
-  "CHAPTER 25: OMEGA CITADEL SHOWDOWN — Defeat & capture the Final Boss Tank!"
+  "CH 1: BLACKWOOD OUTPOST — Escape the horde & unlock the Green Bio-Bottle!",
+  "CH 2: PINE RIDGE ROADBLOCK — Drive your Escape Car through the ambush!",
+  "CH 3: OLD MILL COMPOUND — Breach the cabin & secure the Green Bio-Bottle!",
+  "CH 4: IRON BRIDGE SIEGE — Hold the walled yard against Shadow Zombies!",
+  "CH 5: ST. JUDE QUARANTINE — Clear the courtyard & grab the Bio-Bottle!",
+  "CH 6: SUBTERRANEAN BUNKER — Survive the Acid Spitter swarm!",
+  "CH 7: FOUNDRY YARD — Use your Squad Tank to crush the Boomer wave!",
+  "CH 8: AIRFIELD HANGAR — Outrun the horde & unlock the Bio-Bottle!",
+  "CH 9: DOWNTOWN PRECINCT — Defend the safe-house stairs & roof!",
+  "CH 10: SECTOR 10 TANK BOSS — Destroy & capture the Enemy Tank Boss!",
+  "CH 11: FOREST WATCHTOWER — Navigate the fog & survive the rush!",
+  "CH 12: RAILWAY DEPOT — Smash through the blockade with your car!",
+  "CH 13: BIO-LAB CONTAINMENT — Recover the emerald antidote bottle!",
+  "CH 14: RADIO RELAY HILL — Repel the Rogue Robot assault squad!",
+  "CH 15: CANYON FORTRESS — Blast the armored wave with Tank Shells!",
+  "CH 16: HARBOR DOCKS — Hold the pier until the Bio-Bottle opens!",
+  "CH 17: POWER PLANT — Survive the overload swarm in the yard!",
+  "CH 18: ABANDONED MALL — Clear every room & escape to the yard!",
+  "CH 19: MILITARY CONVOY — Escort your Squad Tank through heavy fire!",
+  "CH 20: DOUBLE TANK CLASH — Defeat & capture the CH 20 Tank Boss!",
+  "CH 21: DARK WOODS NIGHTMARE — Survive the relentless horde rush!",
+  "CH 22: ROBOT UPRISING CORE — Destroy the rogue battle mech squad!",
+  "CH 23: OUTER CITADEL WALLS — Breach the Omega perimeter defenses!",
+  "CH 24: INNER SANCTUM — Survive the final elite zombie & robot guard!",
+  "CH 25: OMEGA CITADEL — Defeat & capture the Final Boss Tank!"
 ];
-function updateQuestHud() {
-  const qh = document.getElementById("questHud");
-  if (!qh) return;
-  const rem = Math.max(0, enemiesLeft + enemies.length);
-  qh.innerText = (portal && portal.open) ? "GREEN BIO-BOTTLE PORTAL OPEN! WALK INTO IT!" : "HOSTILES LEFT: " + rem + " | DRIVE TO ESCAPE HORDE!";
-}
+function updateQuestHud() { const qh = document.getElementById("questHud"); if (!qh) return; const rem = Math.max(0, enemiesLeft + enemies.length); qh.innerText = (portal && portal.open) ? "GREEN BIO-BOTTLE PORTAL OPEN! WALK INTO IT!" : "HOSTILES LEFT: " + rem + " | DRIVE TO ESCAPE HORDE!"; }
 function addFurnishedBuilding(bx, bz, roofCol) {
   buildings.push({ x: bx, z: bz, roof: roofCol });
   walls.push({ x1: bx - 6, z1: bz - 6, x2: bx + 6, z2: bz - 6 }, { x1: bx - 6, z1: bz - 6, x2: bx - 6, z2: bz + 6 }, { x1: bx + 6, z1: bz - 6, x2: bx + 6, z2: bz + 6 }, { x1: bx - 6, z1: bz + 6, x2: bx - 1.3, z2: bz + 6 }, { x1: bx + 1.3, z1: bz + 6, x2: bx + 6, z2: bz + 6 }, { x1: bx - 6, z1: bz, x2: bx - 1.2, z2: bz });
@@ -226,9 +224,8 @@ function addFurnishedBuilding(bx, bz, roofCol) {
   props.push({ x: bx - 3.5, z: bz - 3.5, y: 0.45, sx: 2.2, sy: 0.9, sz: 1.2, col: [0.45, 0.26, 0.12] }, { x: bx - 3.5, z: bz + 3.2, y: 0.55, sx: 1.4, sy: 1.1, sz: 1.4, col: [0.25, 0.35, 0.45] }, { x: bx - 2.5, z: bz - 3.0, y: 4.45, sx: 2.0, sy: 0.9, sz: 1.2, col: [0.15, 0.55, 0.45] });
 }
 function buildLevel(lvl) {
-  trees = []; buildings = []; doors = []; stairs = []; props = []; walls = []; pickups = []; enemies = []; bullets = []; tankShells = []; cars = []; samples = []; portal = null; tgBoss = null; tankBoss = null; inCar = null; px = 0; pz = 0; floorH = 0; py = 1.75; vy = 0; onGround = true;
-  const s = 44;
-  walls.push({ x1: -s, z1: -s, x2: s, z2: -s }, { x1: -s, z1: s, x2: s, z2: s }, { x1: -s, z1: -s, x2: -s, z2: s }, { x1: s, z1: -s, x2: s, z2: s });
+  trees = []; buildings = []; doors = []; stairs = []; props = []; walls = []; pickups = []; enemies = []; bullets = []; tankShells = []; cars = []; portal = null; tgBoss = null; tankBoss = null; inCar = null; px = 0; pz = 0; floorH = 0; py = 1.75; vy = 0; onGround = true;
+  const s = 44; walls.push({ x1: -s, z1: -s, x2: s, z2: -s }, { x1: -s, z1: s, x2: s, z2: s }, { x1: -s, z1: -s, x2: -s, z2: s }, { x1: s, z1: -s, x2: s, z2: s });
   walls.push({ x1: -14, z1: -10, x2: -14, z2: 8 }, { x1: 12, z1: 12, x2: 26, z2: 12 });
   addFurnishedBuilding(20, -18, [0.26, 0.14, 0.08]); addFurnishedBuilding(-24, 18, [0.18, 0.24, 0.32]);
   Array.from({ length: 18 }, (_, i) => { const ang = (i * 2.39996) + lvl, dist = 28 + (i % 5) * 2.4; trees.push({ x: Math.cos(ang) * dist, z: Math.sin(ang) * dist }); });
@@ -264,28 +261,9 @@ function drawRiggedGL(x, z, type, sc, phase, yBase, fixedYaw, skinId, emoteId) {
   else if (isMate) drawCube(x, yb + danceY + 2.74 * sc, z, (sk.wideHat ? 0.82 : 0.58) * sc, 0.18 * sc, (sk.wideHat ? 0.82 : 0.58) * sc, spinAng, sk.hat);
   else drawCube(x + sinF * 0.26 * sc, yb + 2.44 * sc, z + cosF * 0.26 * sc, 0.36 * sc, 0.1 * sc, 0.08 * sc, spinAng, cEye);
 }
-function drawBattleBusGL(bx, by, bz) {
-  drawCube(bx, by, bz, 3.6, 2.5, 9.2, 0, [0.08, 0.38, 0.88]);
-  drawCube(bx, by + 1.4, bz, 3.2, 0.3, 8.6, 0, [0.95, 0.82, 0.1]);
-  drawCube(bx, by + 5.8, bz, 5.2, 3.8, 7.6, 0, [0.0, 0.78, 1.0]);
-  drawCube(bx, by + 3.6, bz, 0.4, 2.2, 0.4, 0, [0.85, 0.85, 0.9]);
-  drawCube(bx + 2.1, by - 0.3, bz + 2.0, 0.8, 0.8, 2.4, 0, [1.0, 0.45, 0.0]);
-  drawCube(bx - 2.1, by - 0.3, bz + 2.0, 0.8, 0.8, 2.4, 0, [1.0, 0.45, 0.0]);
-}
-function drawGliderGL(gx, gy, gz, skinId) {
-  const sk = getSkinColors(skinId);
-  drawCube(gx, gy + 1.45, gz, 4.4, 0.18, 1.5, -yaw, sk.suit);
-  drawCube(gx, gy + 1.55, gz, 2.0, 0.22, 1.7, -yaw, sk.hat);
-  drawCube(gx, gy + 0.85, gz, 0.14, 1.2, 0.14, -yaw, [0.85, 0.88, 0.92]);
-}
-function drawGreenBottlePortal(px0, pz0, isOpen) {
-  const spin = Date.now() * 0.003, bob = Math.sin(Date.now() * 0.005) * 0.25;
-  const bodyCol = isOpen ? [0.0, 1.0, 0.35] : [0.08, 0.35, 0.15];
-  const glowCol = isOpen ? [0.45, 1.0, 0.65] : [0.15, 0.45, 0.2];
-  drawCube(px0, 1.4 + bob, pz0, 1.5, 2.2, 1.5, spin, bodyCol);
-  drawCube(px0, 2.8 + bob, pz0, 0.65, 0.85, 0.65, -spin, glowCol);
-  drawCube(px0, 3.35 + bob, pz0, 0.78, 0.25, 0.78, spin, [0.85, 0.65, 0.2]);
-}
+function drawBattleBusGL(bx, by, bz) { drawCube(bx, by, bz, 3.6, 2.5, 9.2, 0, [0.08, 0.38, 0.88]); drawCube(bx, by + 1.4, bz, 3.2, 0.3, 8.6, 0, [0.95, 0.82, 0.1]); drawCube(bx, by + 5.8, bz, 5.2, 3.8, 7.6, 0, [0.0, 0.78, 1.0]); drawCube(bx, by + 3.6, bz, 0.4, 2.2, 0.4, 0, [0.85, 0.85, 0.9]); drawCube(bx + 2.1, by - 0.3, bz + 2.0, 0.8, 0.8, 2.4, 0, [1.0, 0.45, 0.0]); drawCube(bx - 2.1, by - 0.3, bz + 2.0, 0.8, 0.8, 2.4, 0, [1.0, 0.45, 0.0]); }
+function drawGliderGL(gx, gy, gz, skinId) { const sk = getSkinColors(skinId); drawCube(gx, gy + 1.45, gz, 4.4, 0.18, 1.5, -yaw, sk.suit); drawCube(gx, gy + 1.55, gz, 2.0, 0.22, 1.7, -yaw, sk.hat); drawCube(gx, gy + 0.85, gz, 0.14, 1.2, 0.14, -yaw, [0.85, 0.88, 0.92]); }
+function drawGreenBottlePortal(px0, pz0, isOpen) { const spin = Date.now() * 0.003, bob = Math.sin(Date.now() * 0.005) * 0.25; drawCube(px0, 1.4 + bob, pz0, 1.5, 2.2, 1.5, spin, isOpen ? [0.0, 1.0, 0.35] : [0.08, 0.35, 0.15]); drawCube(px0, 2.8 + bob, pz0, 0.65, 0.85, 0.65, -spin, isOpen ? [0.45, 1.0, 0.65] : [0.15, 0.45, 0.2]); drawCube(px0, 3.35 + bob, pz0, 0.78, 0.25, 0.78, spin, [0.85, 0.65, 0.2]); }
 function drawTankGL(tk) { const c = Math.cos(tk.rot), s = Math.sin(tk.rot), tRot = (tk.turretRot !== undefined) ? tk.turretRot : tk.rot, ts = Math.sin(tRot), tc = Math.cos(tRot); drawCube(tk.x, 0.95, tk.z, 3.8, 1.1, 6.2, -tk.rot, tk.col || [0.22, 0.27, 0.2]); drawCube(tk.x + c * 2.1, 0.65, tk.z + s * 2.1, 0.75, 1.1, 6.6, -tk.rot, [0.1, 0.11, 0.12]); drawCube(tk.x - c * 2.1, 0.65, tk.z - s * 2.1, 0.75, 1.1, 6.6, -tk.rot, [0.1, 0.11, 0.12]); drawCube(tk.x, 1.95, tk.z, 2.6, 0.95, 3.1, -tRot, [0.28, 0.34, 0.25]); drawCube(tk.x + ts * 3.1, 2.0, tk.z - tc * 3.1, 0.32, 0.32, 3.8, -tRot, [0.16, 0.18, 0.16]); }
 function drawCarGL(car) { if (car.isTank) { drawTankGL(car); return; } const c = Math.cos(car.rot), s = Math.sin(car.rot); drawCube(car.x, 0.7, car.z, 2.2, 0.8, 4.2, -car.rot, car.col); drawCube(car.x - s * 0.2, 1.45, car.z + c * 0.2, 1.9, 0.75, 2.2, -car.rot, [0.15, 0.22, 0.28]); }
 function drawFirstPersonGun() {
@@ -301,40 +279,16 @@ function drawFirstPersonGun() {
   if (rec > 0.04) pPart(1.05, 0.25, -0.20, 0.18, 0.18, 0.18, [1, 0.82, 0.18]);
 }
 function equipGun(t) { if (t === 1) { gunName = "M1911 PISTOL"; maxClip = 12; clip = 12; dmg = 55; } else if (t === 2) { gunName = "COMBAT SHOTGUN"; maxClip = 8; clip = 8; dmg = 140; } else if (t === 3) { gunName = "PLASMA RIFLE"; maxClip = 30; clip = 30; dmg = 95; } else { gunName = "MINIGUN"; maxClip = 80; clip = 80; dmg = 65; } reloading = false; playTone(760, 0.12, "triangle", 0.12); showMsg("EQUIPPED: " + gunName, 1800); }
-function endStoryCutscene() {
-  if (!storyActive) return;
-  storyActive = false; clearInterval(storyTimer);
-  const sb = document.getElementById("storyBox"); if (sb) sb.style.display = "none";
-  glidingActive = true; py = 44.0; vy = -0.18;
-  playTone(620, 0.35, "sine", 0.15);
-  showMsg("GLIDER DEPLOYED! Steer with WASD down to your Car or Squad Tank!", 3800);
-  speakVoice("Glider deployed! Drive your car or Squad Tank to escape the horde!", 0.95);
-}
+function endStoryCutscene() { if (!storyActive) return; storyActive = false; clearInterval(storyTimer); const sb = document.getElementById("storyBox"); if (sb) sb.style.display = "none"; glidingActive = true; py = 44.0; vy = -0.18; playTone(620, 0.35, "sine", 0.15); showMsg("GLIDER DEPLOYED! Steer with WASD down to your Car or Squad Tank!", 3800); speakVoice("Glider deployed! Drive your car or Squad Tank to escape the horde!", 0.95); }
 function playStoryCutscene() {
-  storyActive = true; glidingActive = false; py = 46.0; vy = 0;
-  const sb = document.getElementById("storyBox"), cap = document.getElementById("storyCaption"), spk = document.getElementById("storySpeaker");
+  storyActive = true; glidingActive = false; py = 46.0; vy = 0; const sb = document.getElementById("storyBox"), cap = document.getElementById("storyCaption"), spk = document.getElementById("storySpeaker");
   if (!sb || !cap) { storyActive = false; return; }
   sb.style.display = "block"; if (spk) spk.innerText = (myName || "SANTIAGO") + " — BATTLE BUS BRIEFING";
-  const lines = [
-    locName,
-    (myName || "SANTIAGO") + ": Hop in the Escape Car or Heavy Battle Tank to outrun the horde, then grab the Green Bio-Bottle Portal!",
-    "Drop in on my mark—good luck out there!"
-  ];
+  const lines = [locName, (myName || "SANTIAGO") + ": Hop in the Escape Car or Heavy Battle Tank to outrun the horde, then grab the Green Bio-Bottle Portal!", "Drop in on my mark—good luck out there!"];
   let lineIdx = 0, charIdx = 0; cap.innerText = ""; speakVoice(lines.join(" "), 0.92); clearInterval(storyTimer);
-  storyTimer = setInterval(function() {
-    if (!storyActive) { clearInterval(storyTimer); return; }
-    const cur = lines[lineIdx];
-    if (charIdx < cur.length) { cap.innerText += cur.charAt(charIdx++); }
-    else { lineIdx++; if (lineIdx >= lines.length) { setTimeout(endStoryCutscene, 1400); clearInterval(storyTimer); } else { setTimeout(function() { if (storyActive) { cap.innerText = ""; charIdx = 0; } }, 900); } }
-  }, 36);
+  storyTimer = setInterval(function() { if (!storyActive) { clearInterval(storyTimer); return; } const cur = lines[lineIdx]; if (charIdx < cur.length) { cap.innerText += cur.charAt(charIdx++); } else { lineIdx++; if (lineIdx >= lines.length) { setTimeout(endStoryCutscene, 1400); clearInterval(storyTimer); } else { setTimeout(function() { if (storyActive) { cap.innerText = ""; charIdx = 0; } }, 900); } } }, 36);
 }
-function startGame(mode, fromNet) {
-  myName = (document.getElementById("playerNameIn").value || "SANTIAGO").trim().toUpperCase(); gameMode = mode || "campaign"; started = true; hp = 100; shield = 100; points = 500; level = 1; clip = 12; maxClip = 12; reserve = 180; dmg = 55; gunName = "M1911 PISTOL";
-  document.getElementById("lobby").style.display = "none"; glCv.style.display = (viewMode > 0) ? "block" : "none"; c2d.style.display = (viewMode === 0) ? "block" : "none"; document.getElementById("crosshair").style.display = (viewMode > 0) ? "block" : "none";
-  if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) document.getElementById("touchUI").style.display = "block";
-  if (isHost && !fromNet && mqClient && mqClient.connected && roomCode) mqClient.publish("santiago8753432/zombies/room/" + roomCode, JSON.stringify({ t: "start", id: myNetId, mode: gameMode }));
-  buildLevel(1); playStoryCutscene(); if (!window.loopStarted) { window.loopStarted = true; setInterval(spawnEnemy, 950); mainLoop(); }
-}
+function startGame(mode, fromNet) { myName = (document.getElementById("playerNameIn").value || "SANTIAGO").trim().toUpperCase(); gameMode = mode || "campaign"; started = true; hp = 100; shield = 100; points = 500; level = 1; clip = 12; maxClip = 12; reserve = 180; dmg = 55; gunName = "M1911 PISTOL"; document.getElementById("lobby").style.display = "none"; glCv.style.display = (viewMode > 0) ? "block" : "none"; c2d.style.display = (viewMode === 0) ? "block" : "none"; document.getElementById("crosshair").style.display = (viewMode > 0) ? "block" : "none"; if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) document.getElementById("touchUI").style.display = "block"; if (isHost && !fromNet && mqClient && mqClient.connected && roomCode) mqClient.publish("santiago8753432/zombies/room/" + roomCode, JSON.stringify({ t: "start", id: myNetId, mode: gameMode })); buildLevel(1); playStoryCutscene(); if (!window.loopStarted) { window.loopStarted = true; setInterval(spawnEnemy, 950); mainLoop(); } }
 function spawnEnemy() { if (!started || storyActive || glidingActive || hp <= 0 || enemiesLeft <= 0 || enemies.length >= 28) return; const dm = diffMults[difficulty] || diffMults.medium, r = Math.random(); let zType = "zombie", hpM = 1, spdM = 1; if (robotMod || gameMode === "robots" || (gameMode === "campaign" && level === 22) || r < 0.22) { zType = "robot"; hpM = 1.4; spdM = 1.18; } else if (r < 0.28) { zType = "gold"; hpM = 1.6; spdM = 1.48; showMsg("RARE GOLD ZOMBIE SPOTTED!", 2200); } else if (r < 0.37) { zType = "boomer"; hpM = 1.1; spdM = 1.1; } else if (r < 0.46) { zType = "acid"; hpM = 1.25; spdM = 1.15; } else if (r < 0.54) { zType = "shadow"; hpM = 0.9; spdM = 1.7; } const isBoss = (level % 10 === 0 && !tankBoss), ang = Math.random() * Math.PI * 2, dist = 28; enemies.push({ x: Math.max(-40, Math.min(40, px + Math.cos(ang) * dist)), z: Math.max(-40, Math.min(40, pz + Math.sin(ang) * dist)), hp: Math.ceil((isBoss ? 2400 : (90 + level * 15) * hpM) * dm.hp), zType: zType, isBoss: isBoss, spd: (isBoss ? 0.06 : 0.068 * spdM) * dm.spd, phase: Math.random() * 6.28 }); enemiesLeft--; updateQuestHud(); }
 window.addEventListener("blur", function() { Object.keys(keys).forEach(k => { keys[k] = false; }); draggingLook = false; tDX = 0; tDY = 0; });
 function jump3D() { if (!inCar && !glidingActive && onGround) { vy = 0.24; onGround = false; } }
@@ -348,13 +302,7 @@ function useAny() {
 let lastFire = 0, draggingLook = false, lastMX = 0, lastMY = 0;
 function shootAny() {
   if (!started || storyActive || glidingActive || hp <= 0) return;
-  if (inCar && inCar.isTank) {
-    if (Date.now() - lastFire < 650) return;
-    lastFire = Date.now(); playTankShot();
-    const tA = inCar.turretRot || yaw, dx = Math.sin(tA), dz = -Math.cos(tA);
-    bullets.push({ x: inCar.x + dx * 4.4, y: 2.0, z: inCar.z + dz * 4.4, vx: dx * 1.45, vy: 0, vz: dz * 1.45, life: 95, dmg: 1200, isShell: true });
-    return;
-  }
+  if (inCar && inCar.isTank) { if (Date.now() - lastFire < 650) return; lastFire = Date.now(); playTankShot(); const tA = inCar.turretRot || yaw, dx = Math.sin(tA), dz = -Math.cos(tA); bullets.push({ x: inCar.x + dx * 4.4, y: 2.0, z: inCar.z + dz * 4.4, vx: dx * 1.45, vy: 0, vz: dz * 1.45, life: 95, dmg: 1200, isShell: true }); return; }
   if (reloading) return;
   const cd = (gunName === "MINIGUN") ? 65 : (gunName === "COMBAT SHOTGUN") ? 360 : (godMod ? 70 : 140);
   if (Date.now() - lastFire < cd) return;
@@ -387,26 +335,9 @@ function mainLoop() {
   if (!inCar && !storyActive) { if (keys["arrowleft"]) yaw -= 0.04; if (keys["arrowright"]) yaw += 0.04; } if (!storyActive && keys["arrowup"]) pitch = Math.min(1.35, pitch + 0.035); if (!storyActive && keys["arrowdown"]) pitch = Math.max(-1.35, pitch - 0.035);
   if (gp && !storyActive) { fwd -= pAxis(gp, 1); str += pAxis(gp, 0); steer += pAxis(gp, 0); yaw += pAxis(gp, 2) * 0.045; pitch = Math.max(-1.35, Math.min(1.35, pitch - pAxis(gp, 3) * 0.038)); if (pBtn(gp, 3) && !window.gpY) { toggleViewMode(); window.gpY = true; setTimeout(function() { window.gpY = false; }, 350); } if (pBtn(gp, 0)) jump3D(); if (pBtn(gp, 2)) reloadAny(); if (pBtn(gp, 1) && !window.gpB) { useAny(); window.gpB = true; setTimeout(function() { window.gpB = false; }, 350); } if (pBtn(gp, 7) || pBtn(gp, 5)) shootAny(); if (pBtn(gp, 12)) triggerEmote(1 + Math.floor(Math.random() * 250)); if (pBtn(gp, 13)) triggerEmote(251 + Math.floor(Math.random() * 250)); if (pBtn(gp, 14)) triggerEmote(501 + Math.floor(Math.random() * 250)); if (pBtn(gp, 15)) triggerEmote(751 + Math.floor(Math.random() * 250)); }
   if (storyActive) { py = 46.0; vy = 0; }
-  else if (glidingActive) {
-    const gSpd = 0.28, vx = (Math.sin(yaw) * Math.max(0.35, fwd) + Math.cos(yaw) * str) * gSpd, vz = (-Math.cos(yaw) * Math.max(0.35, fwd) + Math.sin(yaw) * str) * gSpd;
-    px += vx; pz += vz; py -= 0.16;
-    if (py <= 1.75) { py = 1.75; vy = 0; onGround = true; glidingActive = false; playTone(440, 0.2, "triangle", 0.14); showMsg("TOUCHDOWN! Press [F] near your Escape Car or Squad Tank!", 3800); }
-  }
-  else if (inCar) {
-    const turnDir = (fwd < -0.05) ? -1 : 1;
-    if (Math.abs(steer) > 0.05) inCar.rot += Math.max(-1, Math.min(1, steer)) * (inCar.isTank ? 0.032 : 0.048) * turnDir;
-    const cSpd = fwd * (inCar.isTank ? 0.24 : 0.36), nx = inCar.x + Math.sin(inCar.rot) * cSpd, nz = inCar.z - Math.cos(inCar.rot) * cSpd;
-    if (!hitsAny(nx, inCar.z)) inCar.x = nx; if (!hitsAny(inCar.x, nz)) inCar.z = nz;
-    px = inCar.x; pz = inCar.z; py = inCar.isTank ? 2.6 : 2.1;
-    if (inCar.isTank) inCar.turretRot = yaw; else yaw = inCar.rot;
-    enemies = enemies.filter(e => { if (Math.abs(cSpd) > 0.06 && Math.hypot(inCar.x - e.x, inCar.z - e.z) < (inCar.isTank ? 3.5 : 2.6)) { playCarCrash(); points += 150; updateQuestHud(); return false; } return true; });
-  } else {
-    const spd = godMod ? 0.24 : 0.16, vx = (viewMode > 0) ? (Math.sin(yaw) * fwd + Math.cos(yaw) * str) * spd : str * spd, vz = (viewMode > 0) ? (-Math.cos(yaw) * fwd + Math.sin(yaw) * str) * spd : -fwd * spd;
-    if (!hitsAny(px + vx, pz)) px += vx; if (!hitsAny(px, pz + vz)) pz += vz; floorH = 0;
-    stairs.forEach(st => { if (Math.abs(px - st.x) < 1.5 && pz <= st.z1 && pz >= st.z2) floorH = ((st.z1 - pz) / (st.z1 - st.z2)) * 4.0; });
-    buildings.forEach(b => { if (Math.abs(px - b.x) < 5.8 && Math.abs(pz - b.z) < 5.8 && py > 4.2) floorH = Math.max(floorH, 4.0); });
-    py += vy; vy -= 0.012; if (py <= floorH + 1.75) { py = floorH + 1.75; vy = 0; onGround = true; }
-  }
+  else if (glidingActive) { const gSpd = 0.28, vx = (Math.sin(yaw) * Math.max(0.35, fwd) + Math.cos(yaw) * str) * gSpd, vz = (-Math.cos(yaw) * Math.max(0.35, fwd) + Math.sin(yaw) * str) * gSpd; px += vx; pz += vz; py -= 0.16; if (py <= 1.75) { py = 1.75; vy = 0; onGround = true; glidingActive = false; playTone(440, 0.2, "triangle", 0.14); showMsg("TOUCHDOWN! Press [F] near your Escape Car or Squad Tank!", 3800); } }
+  else if (inCar) { const turnDir = (fwd < -0.05) ? -1 : 1; if (Math.abs(steer) > 0.05) inCar.rot += Math.max(-1, Math.min(1, steer)) * (inCar.isTank ? 0.032 : 0.048) * turnDir; const cSpd = fwd * (inCar.isTank ? 0.24 : 0.36), nx = inCar.x + Math.sin(inCar.rot) * cSpd, nz = inCar.z - Math.cos(inCar.rot) * cSpd; if (!hitsAny(nx, inCar.z)) inCar.x = nx; if (!hitsAny(inCar.x, nz)) inCar.z = nz; px = inCar.x; pz = inCar.z; py = inCar.isTank ? 2.6 : 2.1; if (inCar.isTank) inCar.turretRot = yaw; else yaw = inCar.rot; enemies = enemies.filter(e => { if (Math.abs(cSpd) > 0.06 && Math.hypot(inCar.x - e.x, inCar.z - e.z) < (inCar.isTank ? 3.5 : 2.6)) { playCarCrash(); points += 150; updateQuestHud(); return false; } return true; }); }
+  else { const spd = godMod ? 0.24 : 0.16, vx = (viewMode > 0) ? (Math.sin(yaw) * fwd + Math.cos(yaw) * str) * spd : str * spd, vz = (viewMode > 0) ? (-Math.cos(yaw) * fwd + Math.sin(yaw) * str) * spd : -fwd * spd; if (!hitsAny(px + vx, pz)) px += vx; if (!hitsAny(px, pz + vz)) pz += vz; floorH = 0; stairs.forEach(st => { if (Math.abs(px - st.x) < 1.5 && pz <= st.z1 && pz >= st.z2) floorH = ((st.z1 - pz) / (st.z1 - st.z2)) * 4.0; }); buildings.forEach(b => { if (Math.abs(px - b.x) < 5.8 && Math.abs(pz - b.z) < 5.8 && py > 4.2) floorH = Math.max(floorH, 4.0); }); py += vy; vy -= 0.012; if (py <= floorH + 1.75) { py = floorH + 1.75; vy = 0; onGround = true; } }
   if (portal && !portal.open && !tankBoss && enemiesLeft <= 0 && enemies.length === 0) { portal.open = true; updateQuestHud(); showMsg("HORDE CLEARED! WALK INTO THE GLOWING GREEN BIO-BOTTLE PORTAL!", 4000); speakVoice("Horde cleared! Walk into the glowing green bio bottle portal!", 0.95); }
   if (portal && portal.open && !glidingActive && Math.hypot(px - portal.x, pz - portal.z) < 3.0) { chaptersCleared++; level++; hp = Math.min(100, hp + 40); points += 500; playTone(1250, 0.35, "sine", 0.16); const st = document.getElementById("skinStatus"); if (st) st.innerText = "SKIN #" + mySkinId + " / 1,000 | CHAPTERS CLEARED: " + chaptersCleared; buildLevel(level); playStoryCutscene(); return; }
   if (!glidingActive && pickups.some(p => !p.done && Math.hypot(px - p.x, pz - p.z) < 2.2)) useAny();
@@ -427,7 +358,7 @@ function mainLoop() {
     const camY = storyActive ? py + 0.55 : (viewMode === 2 || glidingActive) ? py + 1.3 : py;
     const camZ = storyActive ? pz - Math.cos(yaw) * 3.4 : (viewMode === 2 || glidingActive) ? pz + Math.cos(yaw) * 4.6 : pz;
     const camYaw = storyActive ? (yaw + Math.PI) : yaw;
-    gl.clearColor(fogC, fogC, fogC, 1.0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clearColor(fogC[0], fogC[1], fogC[2], 1.0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.uniformMatrix4fv(uProj, false, matPersp(1.18, glCv.width / glCv.height, 0.1, 350)); gl.uniformMatrix4fv(uView, false, matView(camX, camY, camZ, camYaw, storyActive ? -0.05 : pitch));
     gl.uniform3fv(uCam, [camX, camY, camZ]); gl.uniform3fv(uFog, fogC); gl.uniform1f(uFogDens, isDark ? 0.028 : 0.014);
     drawCube(px, -0.25, pz, 500, 0.5, 500, 0, isDark ? [0.04, 0.09, 0.05] : [0.09, 0.22, 0.11]);
