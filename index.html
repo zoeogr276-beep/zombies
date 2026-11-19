@@ -76,7 +76,7 @@ button:hover,button:focus{filter:brightness(1.3);outline:2px solid #ffd700}
 <div class="z-side" style="left:2%">🧟</div>
 <div class="z-side" style="right:2%">🧟‍♂️</div>
 <h1 style="color:#ff1744;font-size:26px;margin:4px;z-index:35;letter-spacing:2px">BIONIC ZOMBIES</h1>
-<div id="modelStatus" style="font-size:11px;color:#00e5ff;margin-bottom:3px">3D ENGINE READY — LOADING .GLB MODELS...</div>
+<div id="modelStatus" style="font-size:11px;color:#00e5ff;margin-bottom:3px">3D ENGINE READY — LOADING YOUR .GLB SKINS IN BACKGROUND...</div>
 <div class="row" style="background:rgba(0,40,60,.45);border:1px solid #00e5ff;border-radius:6px;padding:3px;margin:2px">
 <input id="playerNameIn" placeholder="YOUR NAME TAG" value="SANTIAGO" maxlength="14" onchange="loadPlayerData(this.value)" style="width:120px;text-align:center;border-color:#00ff88;color:#00ff88">
 <button onclick="hostMultiRoom()" style="background:#00695c;border-color:#00ff88">HOST 5-PLAYER ROOM</button>
@@ -175,13 +175,13 @@ if (typeof THREE !== "undefined") {
   dynGroup = new THREE.Group();
   scene.add(worldGroup);
   scene.add(dynGroup);
-  if (THREE.GLTFLoader) {
+  setTimeout(function() {
+    if (!THREE.GLTFLoader) return;
     const loader = new THREE.GLTFLoader();
     loader.setCrossOrigin("anonymous");
     const neoBase = "https://" + "santiago8753432.neocities.org/";
-    const loadSlot = function(key, files, idx) {
-      if (idx >= files.length) return;
-      loader.load(files.at(idx), function(gltf) {
+    const loadSlot = function(key, file) {
+      loader.load(neoBase + file, function(gltf) {
         const root = gltf.scene;
         const box = new THREE.Box3().setFromObject(root);
         const sz = new THREE.Vector3(); box.getSize(sz);
@@ -191,18 +191,13 @@ if (typeof THREE !== "undefined") {
         root.position.y = -b2.min.y;
         Reflect.set(glbModels, key, root);
         const ms = document.getElementById("modelStatus");
-        const loadedCount = Object.values(glbModels).filter(Boolean).length;
-        if (ms) ms.innerText = "REAL 3D .GLB MODELS LOADED: " + loadedCount + " / 7 READY!";
-      }, undefined, function() { loadSlot(key, files, idx + 1); });
+        const cnt = Object.values(glbModels).filter(Boolean).length;
+        if (ms) ms.innerText = "YOUR .GLB SKINS ACTIVE (" + cnt + " LOADED FROM NEOCITIES)!";
+      });
     };
-    loadSlot("z1", new Array("character.glb", neoBase + "character.glb"), 0);
-    loadSlot("z2", new Array("character (1).glb", neoBase + "character (1).glb"), 0);
-    loadSlot("z3", new Array("character (2).glb", neoBase + "character (2).glb"), 0);
-    loadSlot("z4", new Array("character (3).glb", neoBase + "character (3).glb"), 0);
-    loadSlot("z5", new Array("character (4).glb", neoBase + "character (4).glb"), 0);
-    loadSlot("h1", new Array("character (7).glb", neoBase + "character (7).glb"), 0);
-    loadSlot("h2", new Array("character (8).glb", neoBase + "character (8).glb"), 0);
-  }
+    loadSlot("z1", "character.glb");
+    loadSlot("h1", "character (7).glb");
+  }, 600);
 }
 function resizeAll() {
   c2d.width = tagCv.width = window.innerWidth;
@@ -247,7 +242,7 @@ function updateMpHud() { const count = Math.min(5, 1 + Object.keys(remotePlayers
 function sendRoomPacket(obj) { const raw = JSON.stringify(obj), tp = "santiago8753432/zombies/room/" + roomCode; if (localChan) { try { localChan.postMessage(raw); } catch (e) {} } if (mqClient && mqClient.connected && roomCode) { try { mqClient.publish(tp, raw); } catch (e) {} } if (mqClient2 && mqClient2.connected && roomCode) { try { mqClient2.publish(tp, raw); } catch (e) {} } }
 function handleRoomPacket(raw) { try { const d = (typeof raw === "string") ? JSON.parse(raw) : raw; if (!d || d.id === myNetId) return; if (d.t === "hello") { Reflect.set(remotePlayers, d.id, { x: 0, y: 1.75, z: 0, yaw: 0, name: d.name || "ALLY", skin: d.skin || 1, emote: 0, carIdx: -1, carRot: 0 }); updateMpHud(); sendRoomPacket({ t: "pos", id: myNetId, name: myName, x: px, y: py, z: pz, yaw: yaw, skin: mySkinId, emote: myEmote, carIdx: inCar ? cars.indexOf(inCar) : -1, carRot: inCar ? inCar.rot : 0 }); if (isHost && started) sendRoomPacket({ t: "start", id: myNetId, mode: gameMode }); } else if (d.t === "pos") { Reflect.set(remotePlayers, d.id, { x: d.x, y: d.y, z: d.z, yaw: d.yaw, name: d.name || "ALLY", skin: d.skin || 1, emote: d.emote || 0, carIdx: (d.carIdx !== undefined) ? d.carIdx : -1, carRot: d.carRot || 0 }); if (d.carIdx >= 0 && cars.at(d.carIdx)) { const vc = cars.at(d.carIdx); vc.x = d.x; vc.z = d.z; vc.rot = d.carRot || 0; vc.turretRot = d.yaw || 0; } updateMpHud(); } else if (d.t === "start" && !started) { startGame(d.mode || "campaign", true); } else if (d.t === "shoot") { bullets.push({ x: d.x, y: d.y, z: d.z, vx: d.vx, vy: d.vy, vz: d.vz, life: 85, dmg: d.dmg || 55, isShell: !!d.isShell, isLaser: !!d.isLaser, fromNet: true }); playGunSound(d.gun || "M1911 PISTOL"); } else if (d.t === "zsync" && !isHost && Array.isArray(d.list)) { enemies = d.list.map(z => ({ x: z.x, z: z.z, hp: z.hp, zType: z.zType || "zombie", isBoss: !!z.isBoss, spd: 0.06, phase: z.phase || 0 })); enemiesLeft = d.left || 0; if (portal) portal.open = !!d.pOpen; updateQuestHud(); } else if (d.t === "zhit" && isHost) { enemies = enemies.filter(e => { if (Math.hypot(e.x - d.x, e.z - d.z) < 2.2) { e.hp -= (d.dmg || 60); if (e.hp <= 0) { points += 100; updateQuestHud(); return false; } } return true; }); } else if (d.t === "phit" && d.target === myNetId && started && hp > 0 && !pvpLost && !godMod) { let rem = d.dmg || 25; if (shield > 0) { const s = Math.min(shield, rem); shield -= s; rem -= s; } hp = Math.max(0, hp - rem); playZombieScratch(); showMsg("HIT BY " + (d.from || "OPPONENT") + "! -" + (d.dmg || 25) + " DMG", 1400); if (hp <= 0) { if (pvpSecondChance) { pvpSecondChance = false; hp = 100; shield = 0; inCar = null; px = (Math.random() - 0.5) * 38; pz = (Math.random() - 0.5) * 38; py = 1.75; updateQuestHud(); showMsg("SECOND CHANCE USED! LAST LIFE — GRAB A SHIELD POWER-UP!", 4200); } else { pvpLost = true; sendRoomPacket({ t: "pkill", id: myNetId, killer: d.fromId, victim: myName }); showMsg("YOU LOSE! " + (d.from || "OPPONENT") + " WINS! NEXT BIOME LOADING...", 4500); setTimeout(function() { startGame("pvp", true); }, 3800); } } } else if (d.t === "pkill" && d.killer === myNetId) { pvpWins++; points += 2000; savePlayerData(); showMsg("VICTORY #" + pvpWins + "! +2,000 PTS! LOADING NEW PVP BIOME...", 4200); playTone(1250, 0.35, "sine", 0.18); setTimeout(function() { startGame("pvp", true); }, 3800); } } catch (e) {} }
 function bindBroker(url, code, isPrimary) { const topic = "santiago8753432/zombies/room/" + code, st = document.getElementById("mpStatus"); const cl = mqtt.connect(url, { clientId: "zomb_" + (isPrimary ? "a_" : "b_") + myNetId, clean: true, connectTimeout: 6000, reconnectPeriod: 2000 }); cl.on("connect", function() { cl.subscribe(topic); if (st) st.innerText = "ONLINE TV/PHONE/PC ROOM " + code; sendRoomPacket({ t: "hello", id: myNetId, name: myName, skin: mySkinId }); }); cl.on("message", function(tp, msg) { handleRoomPacket(msg.toString()); }); return cl; }
-function connectMqttRoom(code, hostFlag) { const st = document.getElementById("mpStatus"); roomCode = code; isHost = hostFlag; remotePlayers = {}; if (localChan) { try { localChan.close(); } catch (e) {} } if (window.BroadcastChannel) { localChan = new BroadcastChannel("zomb_room_" + code); localChan.onmessage = function(ev) { handleRoomPacket(ev.data); }; } updateMpHud(); if (st) st.innerText = "CONNECTING CLOUD ROOM " + code + "..."; window.loadMqttLib(function() { if (typeof mqtt === "undefined") { if (st) st.innerText = "ROOM " + code + " (LOCAL ONLY)"; return; } if (mqClient) { try { mqClient.end(true); } catch (e) {} } if (mqClient2) { try { mqClient2.end(true); } catch (e) {} } mqClient = bindBroker("wss://" + "://hivemq.com", code, true); mqClient2 = bindBroker("wss://" + "broker.emqx.io:8084/mqtt", code, false); }); }
+function connectMqttRoom(code, hostFlag) { const st = document.getElementById("mpStatus"); roomCode = code; isHost = hostFlag; remotePlayers = {}; if (localChan) { try { localChan.close(); } catch (e) {} } if (window.BroadcastChannel) { localChan = new BroadcastChannel("zomb_room_" + code); localChan.onmessage = function(ev) { handleRoomPacket(ev.data); }; } updateMpHud(); if (st) st.innerText = "CONNECTING CLOUD ROOM " + code + "..."; window.loadMqttLib(function() { if (typeof mqtt === "undefined") { if (st) st.innerText = "ROOM " + code + " (LOCAL ONLY)"; return; } if (mqClient) { try { mqClient.end(true); } catch (e) {} } if (mqClient2) { try { mqClient2.end(true); } catch (e) {} } mqClient = bindBroker("wss://" + "://hivemq.com", code, true); mqClient2 = bindBroker("wss://" + "broker.emqx.io:8884/mqtt", code, false); }); }
 function hostMultiRoom() { myName = (document.getElementById("playerNameIn").value || "PLAYER 1").trim().toUpperCase(); const code = String(1000 + Math.floor(Math.random() * 9000)); document.getElementById("roomCodeIn").value = code; connectMqttRoom(code, true); }
 function joinMultiRoom() { myName = (document.getElementById("playerNameIn").value || "PLAYER 2").trim().toUpperCase(); const code = (document.getElementById("roomCodeIn").value || "").trim(); if (code.length !== 4) { document.getElementById("mpStatus").innerText = "ENTER 4-DIGIT CODE"; return; } connectMqttRoom(code, false); }
 function syncMulti() { if (!roomCode) return; sendRoomPacket({ t: "pos", id: myNetId, name: myName, x: px, y: py, z: pz, yaw: yaw, skin: mySkinId, emote: myEmote, carIdx: inCar ? cars.indexOf(inCar) : -1, carRot: inCar ? inCar.rot : 0 }); if (isHost && started) { const list = enemies.map(e => ({ x: Math.round(e.x * 10) / 10, z: Math.round(e.z * 10) / 10, hp: e.hp, zType: e.zType, isBoss: e.isBoss, phase: e.phase })); sendRoomPacket({ t: "zsync", id: myNetId, list: list, left: enemiesLeft, pOpen: !!(portal && portal.open) }); } }
@@ -354,23 +349,38 @@ function buildLevel(lvl) {
   else { enemiesLeft = 14 + Math.min(40, lvl * 3); }
   rebuildThreeWorld(); updateQuestHud();
 }
-function spawnGlbActor(modelObj, x, y, z, rotY, sc, tintHex, phase) {
-  if (camera && !camera.parent && scene) scene.add(camera);
-  const clone = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone) ? THREE.SkeletonUtils.clone(modelObj) : modelObj.clone();
-  const walkBob = Math.abs(Math.sin(Date.now() * 0.008 + phase)) * 0.09;
-  const tilt = Math.sin(Date.now() * 0.008 + phase) * 0.06;
-  clone.position.set(x, y + walkBob, z);
-  clone.rotation.set(tilt, rotY, tilt * 0.5);
-  clone.scale.multiplyScalar(sc);
-  if (tintHex && tintHex !== 0xffffff) {
-    clone.traverse(function(ch) {
-      if (ch.isMesh && ch.material) {
-        ch.material = ch.material.clone();
-        if (ch.material.color) ch.material.color.lerp(new THREE.Color(tintHex), 0.45);
-      }
-    });
+const meshCache = new Map();
+function buildActorRig(isHuman, tintHex) {
+  const g = new THREE.Group();
+  const cSuit = new THREE.MeshStandardMaterial({ color: tintHex || (isHuman ? 0x1565c0 : 0x2e4a36), roughness: 0.65 });
+  const cSkin = new THREE.MeshStandardMaterial({ color: isHuman ? 0xd8a684 : 0x5c7a58, roughness: 0.7 });
+  const cDark = new THREE.MeshStandardMaterial({ color: 0x181c22, roughness: 0.8 });
+  const cEye = new THREE.MeshBasicMaterial({ color: isHuman ? 0x00e5ff : 0xff1744 });
+  const addP = function(w, h, d, m, x, y, z) { const p = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); p.position.set(x, y, z); g.add(p); return p; };
+  addP(0.20, 0.85, 0.22, cDark, -0.15, 0.45, 0); addP(0.20, 0.85, 0.22, cDark, 0.15, 0.45, 0);
+  addP(0.58, 0.72, 0.32, cSuit, 0, 1.24, 0);
+  addP(0.16, 0.68, 0.16, cSuit, -0.39, 1.24, isHuman ? 0 : 0.18);
+  addP(0.16, 0.68, 0.16, cSuit, 0.39, 1.24, isHuman ? 0 : 0.18);
+  addP(0.34, 0.36, 0.34, cSkin, 0, 1.82, isHuman ? 0 : 0.08);
+  addP(0.08, 0.05, 0.04, cEye, -0.08, 1.85, isHuman ? 0.17 : 0.25);
+  addP(0.08, 0.05, 0.04, cEye, 0.08, 1.85, isHuman ? 0.17 : 0.25);
+  return g;
+}
+function getCachedActor(cacheKey, glbSlot, isHuman, tintHex) {
+  let entry = meshCache.get(cacheKey);
+  if (!entry || (!entry.hasGlb && glbSlot)) {
+    let obj = null;
+    if (glbSlot) {
+      try { obj = (THREE.SkeletonUtils && THREE.SkeletonUtils.clone) ? THREE.SkeletonUtils.clone(glbSlot) : glbSlot.clone(); } catch (e) { obj = null; }
+    }
+    if (!obj) obj = buildActorRig(isHuman, tintHex);
+    else if (tintHex && tintHex !== 0xffffff) {
+      obj.traverse(function(ch) { if (ch.isMesh && ch.material) { ch.material = ch.material.clone(); if (ch.material.color) ch.material.color.lerp(new THREE.Color(tintHex), 0.42); } });
+    }
+    entry = { obj: obj, hasGlb: !!glbSlot };
+    meshCache.set(cacheKey, entry);
   }
-  dynGroup.add(clone);
+  return entry.obj;
 }
 function drawActorThree(x, z, type, sc, phase, yBase, fixedYaw, skinId, emoteId) {
   const ang = (fixedYaw !== undefined) ? fixedYaw : Math.atan2(px - x, pz - z);
@@ -378,18 +388,15 @@ function drawActorThree(x, z, type, sc, phase, yBase, fixedYaw, skinId, emoteId)
   const em = emoteId || 0, emType = em > 0 ? ((em - 1) % 10) + 1 : 0;
   const spinAng = (emType === 5) ? ang + w * 2.5 : ang;
   const danceY = (emType === 2 || emType === 6) ? Math.abs(Math.sin(w * 2.2)) * 0.28 : 0;
-  if (type === "mate" || type === "tg") {
-    const baseModel = (type === "tg") ? (glbModels.h1 || glbModels.h2) : ((Number(skinId) % 2 === 0 ? glbModels.h2 : glbModels.h1) || glbModels.h1 || glbModels.h2);
-    const tint = (type === "tg") ? 0xffd700 : getSkinHex(skinId);
-    if (baseModel) { spawnGlbActor(baseModel, x, yb + danceY, z, spinAng, sc, tint, phase); return; }
-  } else {
-    const zSlot = type === "boomer" ? glbModels.z2 : type === "acid" ? glbModels.z3 : type === "shadow" ? glbModels.z4 : (type === "gold" || sc > 1.4) ? glbModels.z5 : glbModels.z1;
-    const picked = zSlot || glbModels.z1 || glbModels.z2 || glbModels.z3 || glbModels.z4 || glbModels.z5;
-    const zTint = type === "gold" ? 0xffd700 : type === "boomer" ? 0xff5722 : type === "acid" ? 0x76ff03 : type === "shadow" ? 0x7c4dff : type === "robot" ? 0x00e5ff : 0xffffff;
-    if (picked) { spawnGlbActor(picked, x, yb, z, spinAng, sc, zTint, phase); return; }
-  }
-  const fb = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * sc, 0.32 * sc, 1.7 * sc, 10), new THREE.MeshStandardMaterial({ color: type === "mate" ? getSkinHex(skinId) : 0x3b6e3b }));
-  fb.position.set(x, yb + danceY + 0.9 * sc, z); dynGroup.add(fb);
+  const isHum = (type === "mate" || type === "tg");
+  const tint = (type === "tg") ? 0xffd700 : isHum ? getSkinHex(skinId) : (type === "gold" ? 0xffd700 : type === "boomer" ? 0xff5722 : type === "acid" ? 0x76ff03 : type === "shadow" ? 0x7c4dff : type === "robot" ? 0x00e5ff : 0xffffff);
+  const cKey = isHum ? ("h_" + type + "_" + (skinId || 1)) : ("z_" + type + "_" + Math.round(phase * 100));
+  const mesh = getCachedActor(cKey, isHum ? glbModels.h1 : glbModels.z1, isHum, tint);
+  const walkBob = Math.abs(Math.sin(w)) * 0.08, tilt = Math.sin(w) * 0.05;
+  mesh.position.set(x, yb + danceY + walkBob, z);
+  mesh.rotation.set(tilt, spinAng, tilt * 0.5);
+  mesh.scale.set(sc, sc, sc);
+  dynGroup.add(mesh);
 }
 function drawCarThree(car) {
   const g = new THREE.Group(); g.position.set(car.x, 0, car.z); g.rotation.y = -car.rot;
