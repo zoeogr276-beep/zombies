@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Zombies: GTA-Style Humans & Cars, Colosseum PVP & 6 Mega Mods</title>
+<title>BIONIC ZOMBIES</title>
+<script src="https://unpkg.com"></script>
+<script src="https://unpkg.com"></script>
 <script>
 window.loadMqttLib = function(cb) {
   if (typeof mqtt !== "undefined") { if (cb) cb(); return; }
@@ -61,13 +63,13 @@ button:hover,button:focus{filter:brightness(1.3);outline:2px solid #ffd700}
 </div>
 <div id="hud">
 <div id="topLeft" style="position:fixed;top:12px;left:16px;font-size:15px;font-weight:bold;color:#0f8">HP: 100% | SHIELD: 100%</div>
-<div id="locHud">CHAPTER 1: WALLED OUTPOST</div>
+<div id="locHud">CHAPTER 1: SUNSET HIGHWAY</div>
 <div id="questHud">OBJECTIVE: Clear Horde &amp; Grab Green Bio-Bottle Portal!</div>
 <div id="mpHud">SOLO (1/5 PLAYERS)</div>
 <div id="tankHud">ENEMY TANK BOSS: 5000 / 5000 HP</div>
 <div id="topRight" style="position:fixed;top:12px;right:16px;font-size:15px;font-weight:bold;color:#ffd700">PTS: 500 | CH: 1</div>
 <div id="botLeft" style="position:fixed;bottom:14px;left:16px;font-size:14px;font-weight:bold;color:#0ff">M1911 PISTOL (1-4) | 12 / 180</div>
-<div id="botCenter" style="position:fixed;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#aaa;text-align:center">RIGHT-CLICK / Q / LT = AIM | (G / LB) GRAVITY VORTEX | (V) VIEW | (1-4) GUNS | WASD = MOVE | F/B = CAR/TANK</div>
+<div id="botCenter" style="position:fixed;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:#aaa;text-align:center">RIGHT-CLICK / Q / LT = AIM | (G / LB) VORTEX | (V) VIEW | (1-4) GUNS | WASD = MOVE | F/B = CAR/TANK</div>
 <div id="msgBox" style="display:none;position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(8,10,16,.92);border:2px solid #0ff;padding:10px 18px;border-radius:6px;font-size:13px;color:#ffd700;max-width:600px;text-align:center"></div>
 <div id="storyBox" style="display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);width:88%;max-width:760px;background:rgba(4,6,12,.94);border:2px solid #ffd700;border-radius:8px;padding:12px 18px;z-index:25;text-align:center;pointer-events:auto">
 <div id="storySpeaker" style="font-size:12px;color:#00e5ff;font-weight:bold;margin-bottom:4px">ARENA NARRATOR</div>
@@ -78,7 +80,8 @@ button:hover,button:focus{filter:brightness(1.3);outline:2px solid #ffd700}
 <div id="lobby" onclick="startMenuMusic()">
 <div class="z-side" style="left:2%">🧟</div>
 <div class="z-side" style="right:2%">🧟‍♂️</div>
-<h1 style="color:#ff1744;font-size:20px;margin:2px;z-index:35">ZOMBIES: GTA-STYLE HUMANS &amp; CARS, COLOSSEUM PVP &amp; 6 MEGA MODS</h1>
+<h1 style="color:#ff1744;font-size:26px;margin:4px;z-index:35;letter-spacing:2px">BIONIC ZOMBIES</h1>
+<div id="modelStatus" style="font-size:11px;color:#00e5ff;margin-bottom:3px">3D ENGINE READY — LOADING .GLB MODELS...</div>
 <div class="row" style="background:rgba(0,40,60,.45);border:1px solid #00e5ff;border-radius:6px;padding:3px;margin:2px">
 <input id="playerNameIn" placeholder="YOUR NAME TAG" value="SANTIAGO" maxlength="14" onchange="loadPlayerData(this.value)" style="width:120px;text-align:center;border-color:#00ff88;color:#00ff88">
 <button onclick="hostMultiRoom()" style="background:#00695c;border-color:#00ff88">HOST 5-PLAYER ROOM</button>
@@ -128,72 +131,114 @@ button:hover,button:focus{filter:brightness(1.3);outline:2px solid #ffd700}
 </div>
 <script>
 const glCv = document.getElementById("glCanvas"), c2d = document.getElementById("c2d"), tagCv = document.getElementById("tagCanvas");
-const ctx2 = c2d.getContext("2d"), tagCtx = tagCv.getContext("2d"), gl = glCv.getContext("webgl") || glCv.getContext("experimental-webgl");
-function resizeAll() { glCv.width = c2d.width = tagCv.width = window.innerWidth; glCv.height = c2d.height = tagCv.height = window.innerHeight; if (gl) gl.viewport(0, 0, glCv.width, glCv.height); }
-window.addEventListener("resize", resizeAll); resizeAll();
-let uProj = null, uView = null, uModel = null, uColor = null, uCam = null, uFog = null, uFogDens = null, boxBuf = null, cylBuf = null, cylCount = 0, wedgeBuf = null, aPosLoc = 0, aNormLoc = 1;
-if (gl) {
-  const vsSrc = "attribute vec3 aPos;attribute vec3 aNorm;uniform mat4 uProj;uniform mat4 uView;uniform mat4 uModel;varying vec3 vNorm;varying vec3 vWorld;void main(){vec4 wp=uModel*vec4(aPos,1.0);vWorld=wp.xyz;vNorm=mat3(uModel)*aNorm;gl_Position=uProj*uView*wp;}";
-  const fsSrc = "precision mediump float;varying vec3 vNorm;varying vec3 vWorld;uniform vec3 uColor;uniform vec3 uCam;uniform vec3 uFog;uniform float uFogDens;void main(){vec3 n=normalize(vNorm);vec3 l=normalize(vec3(0.45,0.88,0.35));float d=max(dot(n,l),0.0)*0.68+0.32;float dist=length(vWorld-uCam);float fl=clamp(1.0-dist/44.0,0.0,1.0)*0.42;vec3 col=uColor*(d+fl);float f=clamp(exp(-dist*uFogDens),0.0,1.0);gl_FragColor=vec4(mix(uFog,col,f),1.0);}";
-  const mkS = function(t, s) { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; };
-  const prog = gl.createProgram(); gl.attachShader(prog, mkS(gl.VERTEX_SHADER, vsSrc)); gl.attachShader(prog, mkS(gl.FRAGMENT_SHADER, fsSrc)); gl.linkProgram(prog); gl.useProgram(prog); gl.enable(gl.DEPTH_TEST);
-  aPosLoc = gl.getAttribLocation(prog, "aPos"); aNormLoc = gl.getAttribLocation(prog, "aNorm");
-  uProj = gl.getUniformLocation(prog, "uProj"); uView = gl.getUniformLocation(prog, "uView"); uModel = gl.getUniformLocation(prog, "uModel"); uColor = gl.getUniformLocation(prog, "uColor"); uCam = gl.getUniformLocation(prog, "uCam"); uFog = gl.getUniformLocation(prog, "uFog"); uFogDens = gl.getUniformLocation(prog, "uFogDens");
-  const boxVerts = new Float32Array(new Array(-0.5,-0.5,0.5,0,0,1,0.5,-0.5,0.5,0,0,1,0.5,0.5,0.5,0,0,1,-0.5,-0.5,0.5,0,0,1,0.5,0.5,0.5,0,0,1,-0.5,0.5,0.5,0,0,1,0.5,-0.5,-0.5,0,0,-1,-0.5,-0.5,-0.5,0,0,-1,-0.5,0.5,-0.5,0,0,-1,0.5,-0.5,-0.5,0,0,-1,-0.5,0.5,-0.5,0,0,-1,0.5,0.5,-0.5,0,0,-1,-0.5,0.5,0.5,0,1,0,0.5,0.5,0.5,0,1,0,0.5,0.5,-0.5,0,1,0,-0.5,0.5,0.5,0,1,0,0.5,0.5,-0.5,0,1,0,-0.5,0.5,-0.5,0,1,0,-0.5,-0.5,-0.5,0,-1,0,0.5,-0.5,-0.5,0,-1,0,0.5,-0.5,0.5,0,-1,0,-0.5,-0.5,-0.5,0,-1,0,0.5,-0.5,0.5,0,-1,0,-0.5,-0.5,0.5,0,-1,0,0.5,-0.5,0.5,1,0,0,0.5,-0.5,-0.5,1,0,0,0.5,0.5,-0.5,1,0,0,0.5,-0.5,0.5,1,0,0,0.5,0.5,-0.5,1,0,0,0.5,0.5,0.5,1,0,0,-0.5,-0.5,-0.5,-1,0,0,-0.5,-0.5,0.5,-1,0,0,-0.5,0.5,0.5,-1,0,0,-0.5,-0.5,-0.5,-1,0,0,-0.5,0.5,0.5,-1,0,0,-0.5,0.5,-0.5,-1,0,0));
-  boxBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, boxBuf); gl.bufferData(gl.ARRAY_BUFFER, boxVerts, gl.STATIC_DRAW);
-  const cArr = new Array(), segs = 12;
-  for (let j = 0; j < segs; j++) {
-    const a1 = (j / segs) * Math.PI * 2, a2 = ((j + 1) / segs) * Math.PI * 2, c1 = Math.cos(a1), s1 = Math.sin(a1), c2 = Math.cos(a2), s2 = Math.sin(a2);
-    cArr.push(c1*0.5,-0.5,s1*0.5,c1,0,s1, c2*0.5,-0.5,s2*0.5,c2,0,s2, c2*0.5,0.5,s2*0.5,c2,0,s2, c1*0.5,-0.5,s1*0.5,c1,0,s1, c2*0.5,0.5,s2*0.5,c2,0,s2, c1*0.5,0.5,s1*0.5,c1,0,s1);
-    cArr.push(0,0.5,0,0,1,0, c1*0.5,0.5,s1*0.5,0,1,0, c2*0.5,0.5,s2*0.5,0,1,0);
-    cArr.push(0,-0.5,0,0,-1,0, c2*0.5,-0.5,s2*0.5,0,-1,0, c1*0.5,-0.5,s1*0.5,0,-1,0);
+const ctx2 = c2d.getContext("2d"), tagCtx = tagCv.getContext("2d");
+let scene = null, camera = null, renderer = null, sunLight = null, hemiLight = null, skyMesh = null, worldGroup = null, dynGroup = null;
+const glbModels = { z1: null, z2: null, z3: null, z4: null, z5: null, h1: null, h2: null };
+let roadTex = null, grassTex = null, brickTex = null;
+function makeProcTex(type) {
+  const cv = document.createElement("canvas"); cv.width = 256; cv.height = 256;
+  const g = cv.getContext("2d");
+  if (type === "road") {
+    g.fillStyle = "#26292e"; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 1800; i++) { const v = 32 + Math.floor(Math.random() * 26); g.fillStyle = "rgb(" + v + "," + v + "," + (v + 3) + ")"; g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2); }
+    g.fillStyle = "#e0e4e8"; g.fillRect(10, 0, 6, 256); g.fillRect(240, 0, 6, 256);
+    g.fillStyle = "#ffd54f"; g.fillRect(125, 16, 6, 96); g.fillRect(125, 144, 6, 96);
+  } else if (type === "grass") {
+    g.fillStyle = "#264d24"; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 2200; i++) { const gr = 55 + Math.floor(Math.random() * 55); g.fillStyle = "rgb(" + Math.floor(gr * 0.45) + "," + gr + "," + Math.floor(gr * 0.35) + ")"; g.fillRect(Math.random() * 256, Math.random() * 256, 2, 5); }
+  } else {
+    g.fillStyle = "#7a3b2e"; g.fillRect(0, 0, 256, 256);
+    g.fillStyle = "#5c2a20";
+    for (let y = 0; y < 256; y += 32) { g.fillRect(0, y, 256, 3); for (let x = (y % 64 === 0 ? 0 : 32); x < 256; x += 64) g.fillRect(x, y, 3, 32); }
   }
-  cylBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, cylBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cArr), gl.STATIC_DRAW); cylCount = cArr.length / 6;
-  const wVerts = new Float32Array(new Array(-0.5,-0.5,0.5,0,0.7,0.7, 0.5,-0.5,0.5,0,0.7,0.7, 0.5,0.5,-0.5,0,0.7,0.7, -0.5,-0.5,0.5,0,0.7,0.7, 0.5,0.5,-0.5,0,0.7,0.7, -0.5,0.5,-0.5,0,0.7,0.7, -0.5,-0.5,-0.5,0,0,-1, 0.5,-0.5,-0.5,0,0,-1, 0.5,0.5,-0.5,0,0,-1, -0.5,-0.5,-0.5,0,0,-1, 0.5,0.5,-0.5,0,0,-1, -0.5,0.5,-0.5,0,0,-1, -0.5,-0.5,-0.5,0,-1,0, 0.5,-0.5,0.5,0,-1,0, 0.5,-0.5,-0.5,0,-1,0, -0.5,-0.5,-0.5,0,-1,0, -0.5,-0.5,0.5,0,-1,0, 0.5,-0.5,0.5,0,-1,0, 0.5,-0.5,0.5,1,0,0, 0.5,-0.5,-0.5,1,0,0, 0.5,0.5,-0.5,1,0,0, -0.5,-0.5,-0.5,-1,0,0, -0.5,-0.5,0.5,-1,0,0, -0.5,0.5,-0.5,-1,0,0));
-  wedgeBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, wedgeBuf); gl.bufferData(gl.ARRAY_BUFFER, wVerts, gl.STATIC_DRAW);
-  gl.enableVertexAttribArray(aPosLoc); gl.enableVertexAttribArray(aNormLoc);
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.RepeatWrapping;
+  return t;
 }
-function bindMesh(buf) { gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 24, 0); gl.vertexAttribPointer(aNormLoc, 3, gl.FLOAT, false, 24, 12); }
-function matPersp(fov, asp, n, f) { const t = 1 / Math.tan(fov / 2), nf = 1 / (n - f); return new Float32Array(new Array(t / asp,0,0,0, 0,t,0,0, 0,0,(f + n) * nf,-1, 0,0,2 * f * n * nf,0)); }
-function matView(x, y, z, yawA, pitchA) { const fx = Math.sin(yawA) * Math.cos(pitchA), fy = Math.sin(pitchA), fz = -Math.cos(yawA) * Math.cos(pitchA), rx = Math.cos(yawA), ry = 0, rz = Math.sin(yawA), ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx; return new Float32Array(new Array(rx, ux, -fx, 0, ry, uy, -fy, 0, rz, uz, -fz, 0, -(rx * x + ry * y + rz * z), -(ux * x + uy * y + uz * z), (fx * x + fy * y + fz * z), 1)); }
-function drawCube(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(boxBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, 36); }
-function drawWedge(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(wedgeBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, 24); }
-function drawCyl(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(cylBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, cylCount); }
-function drawLimb(p1, p2, rThick, col) {
-  if (!gl) return; bindMesh(cylBuf);
-  const dx = p2.at(0) - p1.at(0), dy = p2.at(1) - p1.at(1), dz = p2.at(2) - p1.at(2), len = Math.hypot(dx, dy, dz);
-  if (len < 0.001) return;
-  const ux = dx / len, uy = dy / len, uz = dz / len;
-  let rx = uz, ry = 0, rz = -ux, rl = Math.hypot(rx, rz);
-  if (rl < 0.001) { rx = 1; rz = 0; } else { rx /= rl; rz /= rl; }
-  const fx = uy * rz - uz * ry, fy = uz * rx - ux * rz, fz = ux * ry - uy * rx;
-  const mx = (p1.at(0) + p2.at(0)) * 0.5, my = (p1.at(1) + p2.at(1)) * 0.5, mz = (p1.at(2) + p2.at(2)) * 0.5;
-  const m = new Float32Array(new Array(rx * rThick, ry * rThick, rz * rThick, 0, ux * len, uy * len, uz * len, 0, fx * rThick, fy * rThick, fz * rThick, 0, mx, my, mz, 1));
-  gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, cylCount);
+if (typeof THREE !== "undefined") {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x6fb1e4);
+  scene.fog = new THREE.FogExp2(0x8ec3eb, 0.0085);
+  camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 450);
+  renderer = new THREE.WebGLRenderer({ canvas: glCv, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  hemiLight = new THREE.HemisphereLight(0xdff2ff, 0x3b5e36, 1.05);
+  scene.add(hemiLight);
+  sunLight = new THREE.DirectionalLight(0xfff5dc, 1.4);
+  sunLight.position.set(45, 75, -40);
+  scene.add(sunLight);
+  const skyGeo = new THREE.SphereGeometry(320, 20, 12);
+  const skyMat = new THREE.MeshBasicMaterial({ color: 0x7bc2f5, side: THREE.BackSide, fog: false });
+  skyMesh = new THREE.Mesh(skyGeo, skyMat);
+  scene.add(skyMesh);
+  roadTex = makeProcTex("road"); roadTex.repeat.set(1, 24);
+  grassTex = makeProcTex("grass"); grassTex.repeat.set(40, 40);
+  brickTex = makeProcTex("brick"); brickTex.repeat.set(3, 2);
+  worldGroup = new THREE.Group();
+  dynGroup = new THREE.Group();
+  scene.add(worldGroup);
+  scene.add(dynGroup);
+  if (THREE.GLTFLoader) {
+    const loader = new THREE.GLTFLoader();
+    loader.setCrossOrigin("anonymous");
+    const neoBase = "https://" + "santiago8753432.neocities.org/";
+    const loadSlot = function(key, files, idx) {
+      if (idx >= files.length) return;
+      loader.load(files.at(idx), function(gltf) {
+        const root = gltf.scene;
+        const box = new THREE.Box3().setFromObject(root);
+        const sz = new THREE.Vector3(); box.getSize(sz);
+        const sc = 2.05 / Math.max(0.1, sz.y);
+        root.scale.set(sc, sc, sc);
+        const b2 = new THREE.Box3().setFromObject(root);
+        root.position.y = -b2.min.y;
+        Reflect.set(glbModels, key, root);
+        const ms = document.getElementById("modelStatus");
+        const loadedCount = Object.values(glbModels).filter(Boolean).length;
+        if (ms) ms.innerText = "REAL 3D .GLB MODELS LOADED: " + loadedCount + " / 7 READY!";
+      }, undefined, function() { loadSlot(key, files, idx + 1); });
+    };
+    loadSlot("z1", new Array("character.glb", neoBase + "character.glb"), 0);
+    loadSlot("z2", new Array("character (1).glb", neoBase + "character (1).glb"), 0);
+    loadSlot("z3", new Array("character (2).glb", neoBase + "character (2).glb"), 0);
+    loadSlot("z4", new Array("character (3).glb", neoBase + "character (3).glb"), 0);
+    loadSlot("z5", new Array("character (4).glb", neoBase + "character (4).glb"), 0);
+    loadSlot("h1", new Array("character (7).glb", neoBase + "character (7).glb"), 0);
+    loadSlot("h2", new Array("character (8).glb", neoBase + "character (8).glb"), 0);
+  }
 }
-function project3DToScreen(wx, wy, wz, camX, camY, camZ) { const dx = wx - camX, dy = wy - camY, dz = wz - camZ, fx = Math.sin(yaw) * Math.cos(pitch), fy = Math.sin(pitch), fz = -Math.cos(yaw) * Math.cos(pitch), rx = Math.cos(yaw), rz = Math.sin(yaw), ux = -Math.sin(yaw) * Math.sin(pitch), uy = Math.cos(pitch), uz = Math.cos(yaw) * Math.sin(pitch), cz = dx * fx + dy * fy + dz * fz; if (cz <= 0.4) return null; const cx = dx * rx + dz * rz, cy = dx * ux + dy * uy + dz * uz, f = 1 / Math.tan(curFov / 2), asp = tagCv.width / tagCv.height; return { x: (cx * (f / asp) / cz + 1) * 0.5 * tagCv.width, y: (1 - cy * f / cz) * 0.5 * tagCv.height }; }
-let started = false, difficulty = "medium", gameMode = "campaign", viewMode = gl ? 1 : 0, robotMod = false, horrorMod = false, godMod = false, cyberMod = false, titanMod = false, turboMod = false, stormMod = false, vampMod = false, gravMod = false, aiming = false, curFov = 1.18, touchForced = false;
+function resizeAll() {
+  glCv.width = c2d.width = tagCv.width = window.innerWidth;
+  glCv.height = c2d.height = tagCv.height = window.innerHeight;
+  if (renderer && camera) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
+}
+window.addEventListener("resize", resizeAll); resizeAll();
+function project3DToScreen(wx, wy, wz) {
+  if (!camera) return null;
+  const v = new THREE.Vector3(wx, wy, wz);
+  v.project(camera);
+  if (v.z > 1) return null;
+  return { x: (v.x * 0.5 + 0.5) * tagCv.width, y: (-v.y * 0.5 + 0.5) * tagCv.height };
+}
+let started = false, difficulty = "medium", gameMode = "campaign", viewMode = renderer ? 1 : 0, robotMod = false, horrorMod = false, godMod = false, cyberMod = false, titanMod = false, turboMod = false, stormMod = false, vampMod = false, gravMod = false, aiming = false, curFov = 68, touchForced = false;
 let hp = 100, shield = 100, points = 500, level = 1, pvpWins = 0, clip = 12, maxClip = 12, reserve = 180, dmg = 55, reloading = false, reloadStart = 0, gunName = "M1911 PISTOL";
 let yaw = 0, pitch = 0, px = 0, pz = 0, py = 1.75, vy = 0, onGround = true, floorH = 0, pvpSecondChance = true, pvpLost = false, powerBoost = 0, vortexOrb = null, vortexCd = 0;
-let enemies = new Array(), bullets = new Array(), tankShells = new Array(), pickups = new Array(), trees = new Array(), buildings = new Array(), doors = new Array(), stairs = new Array(), props = new Array(), walls = new Array(), cars = new Array(), portal = null, locName = "CH 1: BLACKWOOD OUTPOST";
+let enemies = new Array(), bullets = new Array(), tankShells = new Array(), pickups = new Array(), trees = new Array(), buildings = new Array(), doors = new Array(), stairs = new Array(), props = new Array(), walls = new Array(), cars = new Array(), grassTufts = new Array(), portal = null, locName = "CH 1: SUNSET HIGHWAY";
 let chaptersCleared = 0, myName = "SANTIAGO", mySkinId = 1, myEmote = 0, emoteTimer = 0, storyActive = false, storyTimer = null, glidingActive = false;
 let inCar = null, enemiesLeft = 0, tgBoss = null, tgTimer = 0, tgTick = 0, tankBoss = null, sfxCd = 0;
 let mqClient = null, mqClient2 = null, localChan = null, remotePlayers = {}, isHost = false, roomCode = "", myNetId = "p-" + Math.floor(Math.random() * 999999);
-const keys = {}, WHITE = new Array(1.0, 1.0, 1.0);
+const keys = {};
 function setAimState(on) { aiming = !!on; const ch = document.getElementById("crosshair"); if (ch) { ch.style.width = aiming ? "10px" : "18px"; ch.style.height = aiming ? "10px" : "18px"; ch.style.margin = aiming ? "-5px 0 0 -5px" : "-9px 0 0 -9px"; ch.style.borderColor = aiming ? "#ff1744" : "#0f8"; } }
 function toggleAim() { setAimState(!aiming); showMsg(aiming ? "AIM ZOOM: ON" : "AIM ZOOM: OFF", 900); }
 function toggleTouchPad() { touchForced = !touchForced; const ui = document.getElementById("touchUI"), b = document.getElementById("btnTouch"); if (ui) ui.style.display = touchForced ? "block" : "none"; if (b) b.innerText = touchForced ? "PHONE TOUCH: ON" : "PHONE TOUCH: AUTO"; }
-function getSkinColors(id) {
+function getSkinHex(id) {
   const n = Math.max(1, Math.min(1000, Number(id) || 1));
-  const tones = new Array(new Array(0.92, 0.74, 0.60), new Array(0.84, 0.64, 0.48), new Array(0.72, 0.50, 0.36), new Array(0.55, 0.36, 0.24), new Array(0.38, 0.24, 0.16));
-  const hairs = new Array(new Array(0.10, 0.08, 0.07), new Array(0.28, 0.16, 0.09), new Array(0.65, 0.48, 0.20), new Array(0.48, 0.15, 0.08), new Array(0.85, 0.85, 0.88), new Array(0.12, 0.45, 0.85));
-  return {
-    skin: tones.at(n % tones.length),
-    hair: hairs.at((n * 3) % hairs.length),
-    hairStyle: n % 5,
-    suit: new Array(0.16 + ((n * 73) % 78) / 100, 0.16 + ((n * 137) % 78) / 100, 0.16 + ((n * 199) % 78) / 100),
-    pants: new Array(0.10 + ((n * 41) % 45) / 100, 0.12 + ((n * 67) % 45) / 100, 0.18 + ((n * 89) % 55) / 100)
-  };
+  if (n === 1) return 0xffffff;
+  const r = Math.floor(95 + ((n * 73) % 160));
+  const g = Math.floor(95 + ((n * 137) % 160));
+  const b = Math.floor(95 + ((n * 199) % 160));
+  return (r << 16) | (g << 8) | b;
 }
 function setSkinNumber(val) { mySkinId = Math.max(1, Math.min(1000, Number(val) || 1)); const st = document.getElementById("skinStatus"), inp = document.getElementById("skinNumIn"); if (inp) inp.value = String(mySkinId); if (st) st.innerText = "SKIN #" + mySkinId + " / 1,000 | CH: " + chaptersCleared + " | PVP WINS: " + pvpWins; }
 function randomizeSkin() { setSkinNumber(1 + Math.floor(Math.random() * 1000)); }
@@ -203,13 +248,13 @@ window.addEventListener("load", function() { loadPlayerData(); });
 function triggerEmote(id) { myEmote = Math.max(1, Math.min(1000, Number(id) || 1)); emoteTimer = 130; const styles = new Array("HERO WAVE", "VICTORY DANCE", "COMMANDER SALUTE", "TITAN FLEX", "360 SPIN", "TURBO JUMP", "LASER POSE", "MOONWALK", "CHAMPION CLAP", "CYBER FLIP"); playTone(440 + (myEmote % 20) * 35, 0.14, "sine", 0.1); showMsg((myName || "PLAYER") + " EMOTE: " + styles.at((myEmote - 1) % 10) + " #" + myEmote, 1600); }
 function updateMpHud() { const count = Math.min(5, 1 + Object.keys(remotePlayers).length), h = document.getElementById("mpHud"); if (h) h.innerText = roomCode ? "ROOM " + roomCode + " (" + count + "/5 PLAYERS)" : "SOLO (1/5 PLAYERS)"; }
 function sendRoomPacket(obj) { const raw = JSON.stringify(obj), tp = "santiago8753432/zombies/room/" + roomCode; if (localChan) { try { localChan.postMessage(raw); } catch (e) {} } if (mqClient && mqClient.connected && roomCode) { try { mqClient.publish(tp, raw); } catch (e) {} } if (mqClient2 && mqClient2.connected && roomCode) { try { mqClient2.publish(tp, raw); } catch (e) {} } }
-function handleRoomPacket(raw) { try { const d = (typeof raw === "string") ? JSON.parse(raw) : raw; if (!d || d.id === myNetId) return; if (d.t === "hello") { Reflect.set(remotePlayers, d.id, { x: 0, y: 1.75, z: 0, yaw: 0, name: d.name || "ALLY", skin: d.skin || 1, emote: 0, carIdx: -1, carRot: 0 }); updateMpHud(); sendRoomPacket({ t: "pos", id: myNetId, name: myName, x: px, y: py, z: pz, yaw: yaw, skin: mySkinId, emote: myEmote, carIdx: inCar ? cars.indexOf(inCar) : -1, carRot: inCar ? inCar.rot : 0 }); if (isHost && started) sendRoomPacket({ t: "start", id: myNetId, mode: gameMode }); } else if (d.t === "pos") { Reflect.set(remotePlayers, d.id, { x: d.x, y: d.y, z: d.z, yaw: d.yaw, name: d.name || "ALLY", skin: d.skin || 1, emote: d.emote || 0, carIdx: (d.carIdx !== undefined) ? d.carIdx : -1, carRot: d.carRot || 0 }); if (d.carIdx >= 0 && cars.at(d.carIdx)) { const vc = cars.at(d.carIdx); vc.x = d.x; vc.z = d.z; vc.rot = d.carRot || 0; vc.turretRot = d.yaw || 0; } updateMpHud(); } else if (d.t === "start" && !started) { startGame(d.mode || "campaign", true); } else if (d.t === "shoot") { bullets.push({ x: d.x, y: d.y, z: d.z, vx: d.vx, vy: d.vy, vz: d.vz, life: 85, dmg: d.dmg || 55, isShell: !!d.isShell, isLaser: !!d.isLaser, fromNet: true }); playGunSound(d.gun || "M1911 PISTOL"); } else if (d.t === "zsync" && !isHost && Array.isArray(d.list)) { enemies = d.list.map(z => ({ x: z.x, z: z.z, hp: z.hp, zType: z.zType || "zombie", isBoss: !!z.isBoss, spd: 0.06, phase: z.phase || 0 })); enemiesLeft = d.left || 0; if (portal) portal.open = !!d.pOpen; updateQuestHud(); } else if (d.t === "zhit" && isHost) { enemies = enemies.filter(e => { if (Math.hypot(e.x - d.x, e.z - d.z) < 2.2) { e.hp -= (d.dmg || 60); if (e.hp <= 0) { points += 100; updateQuestHud(); return false; } } return true; }); } else if (d.t === "phit" && d.target === myNetId && started && hp > 0 && !pvpLost && !godMod) { let rem = d.dmg || 25; if (shield > 0) { const s = Math.min(shield, rem); shield -= s; rem -= s; } hp = Math.max(0, hp - rem); playZombieScratch(); showMsg("HIT BY " + (d.from || "OPPONENT") + "! -" + (d.dmg || 25) + " DMG", 1400); if (hp <= 0) { if (pvpSecondChance) { pvpSecondChance = false; hp = 100; shield = 0; inCar = null; px = (Math.random() - 0.5) * 38; pz = (Math.random() - 0.5) * 38; py = 1.75; updateQuestHud(); speakVoice(myName + " used their Second Chance! Last life!", 0.95); showMsg("SECOND CHANCE USED! LAST LIFE — GRAB A SHIELD POWER-UP!", 4200); } else { pvpLost = true; sendRoomPacket({ t: "pkill", id: myNetId, killer: d.fromId, victim: myName }); speakVoice(myName + " has been defeated! " + (d.from || "Opponent") + " wins! Entering next PVP biome!", 0.92); showMsg("YOU LOSE! " + (d.from || "OPPONENT") + " WINS! Next biome loading...", 4500); setTimeout(function() { startGame("pvp", true); }, 3800); } } } else if (d.t === "pkill" && d.killer === myNetId) { pvpWins++; points += 2000; savePlayerData(); speakVoice("Victory! " + myName + " defeated " + (d.victim || "opponent") + "! Advancing to next PVP biome!", 0.98); showMsg("VICTORY #" + pvpWins + "! +2,000 PTS! LOADING NEW PVP BIOME...", 4200); playTone(1250, 0.35, "sine", 0.18); setTimeout(function() { startGame("pvp", true); }, 3800); } } catch (e) {} }
+function handleRoomPacket(raw) { try { const d = (typeof raw === "string") ? JSON.parse(raw) : raw; if (!d || d.id === myNetId) return; if (d.t === "hello") { Reflect.set(remotePlayers, d.id, { x: 0, y: 1.75, z: 0, yaw: 0, name: d.name || "ALLY", skin: d.skin || 1, emote: 0, carIdx: -1, carRot: 0 }); updateMpHud(); sendRoomPacket({ t: "pos", id: myNetId, name: myName, x: px, y: py, z: pz, yaw: yaw, skin: mySkinId, emote: myEmote, carIdx: inCar ? cars.indexOf(inCar) : -1, carRot: inCar ? inCar.rot : 0 }); if (isHost && started) sendRoomPacket({ t: "start", id: myNetId, mode: gameMode }); } else if (d.t === "pos") { Reflect.set(remotePlayers, d.id, { x: d.x, y: d.y, z: d.z, yaw: d.yaw, name: d.name || "ALLY", skin: d.skin || 1, emote: d.emote || 0, carIdx: (d.carIdx !== undefined) ? d.carIdx : -1, carRot: d.carRot || 0 }); if (d.carIdx >= 0 && cars.at(d.carIdx)) { const vc = cars.at(d.carIdx); vc.x = d.x; vc.z = d.z; vc.rot = d.carRot || 0; vc.turretRot = d.yaw || 0; } updateMpHud(); } else if (d.t === "start" && !started) { startGame(d.mode || "campaign", true); } else if (d.t === "shoot") { bullets.push({ x: d.x, y: d.y, z: d.z, vx: d.vx, vy: d.vy, vz: d.vz, life: 85, dmg: d.dmg || 55, isShell: !!d.isShell, isLaser: !!d.isLaser, fromNet: true }); playGunSound(d.gun || "M1911 PISTOL"); } else if (d.t === "zsync" && !isHost && Array.isArray(d.list)) { enemies = d.list.map(z => ({ x: z.x, z: z.z, hp: z.hp, zType: z.zType || "zombie", isBoss: !!z.isBoss, spd: 0.06, phase: z.phase || 0 })); enemiesLeft = d.left || 0; if (portal) portal.open = !!d.pOpen; updateQuestHud(); } else if (d.t === "zhit" && isHost) { enemies = enemies.filter(e => { if (Math.hypot(e.x - d.x, e.z - d.z) < 2.2) { e.hp -= (d.dmg || 60); if (e.hp <= 0) { points += 100; updateQuestHud(); return false; } } return true; }); } else if (d.t === "phit" && d.target === myNetId && started && hp > 0 && !pvpLost && !godMod) { let rem = d.dmg || 25; if (shield > 0) { const s = Math.min(shield, rem); shield -= s; rem -= s; } hp = Math.max(0, hp - rem); playZombieScratch(); showMsg("HIT BY " + (d.from || "OPPONENT") + "! -" + (d.dmg || 25) + " DMG", 1400); if (hp <= 0) { if (pvpSecondChance) { pvpSecondChance = false; hp = 100; shield = 0; inCar = null; px = (Math.random() - 0.5) * 38; pz = (Math.random() - 0.5) * 38; py = 1.75; updateQuestHud(); showMsg("SECOND CHANCE USED! LAST LIFE — GRAB A SHIELD POWER-UP!", 4200); } else { pvpLost = true; sendRoomPacket({ t: "pkill", id: myNetId, killer: d.fromId, victim: myName }); showMsg("YOU LOSE! " + (d.from || "OPPONENT") + " WINS! Next biome loading...", 4500); setTimeout(function() { startGame("pvp", true); }, 3800); } } } else if (d.t === "pkill" && d.killer === myNetId) { pvpWins++; points += 2000; savePlayerData(); showMsg("VICTORY #" + pvpWins + "! +2,000 PTS! LOADING NEW PVP BIOME...", 4200); playTone(1250, 0.35, "sine", 0.18); setTimeout(function() { startGame("pvp", true); }, 3800); } } catch (e) {} }
 function bindBroker(url, code, isPrimary) { const topic = "santiago8753432/zombies/room/" + code, st = document.getElementById("mpStatus"); const cl = mqtt.connect(url, { clientId: "zomb_" + (isPrimary ? "a_" : "b_") + myNetId, clean: true, connectTimeout: 6000, reconnectPeriod: 2000 }); cl.on("connect", function() { cl.subscribe(topic); if (st) st.innerText = "ONLINE TV/PHONE/PC ROOM " + code; sendRoomPacket({ t: "hello", id: myNetId, name: myName, skin: mySkinId }); }); cl.on("message", function(tp, msg) { handleRoomPacket(msg.toString()); }); return cl; }
 function connectMqttRoom(code, hostFlag) { const st = document.getElementById("mpStatus"); roomCode = code; isHost = hostFlag; remotePlayers = {}; if (localChan) { try { localChan.close(); } catch (e) {} } if (window.BroadcastChannel) { localChan = new BroadcastChannel("zomb_room_" + code); localChan.onmessage = function(ev) { handleRoomPacket(ev.data); }; } updateMpHud(); if (st) st.innerText = "CONNECTING CLOUD ROOM " + code + "..."; window.loadMqttLib(function() { if (typeof mqtt === "undefined") { if (st) st.innerText = "ROOM " + code + " (LOCAL ONLY)"; return; } if (mqClient) { try { mqClient.end(true); } catch (e) {} } if (mqClient2) { try { mqClient2.end(true); } catch (e) {} } mqClient = bindBroker("wss://" + "://hivemq.com", code, true); mqClient2 = bindBroker("wss://" + "broker.emqx.io:8084/mqtt", code, false); }); }
 function hostMultiRoom() { myName = (document.getElementById("playerNameIn").value || "PLAYER 1").trim().toUpperCase(); const code = String(1000 + Math.floor(Math.random() * 9000)); document.getElementById("roomCodeIn").value = code; connectMqttRoom(code, true); }
 function joinMultiRoom() { myName = (document.getElementById("playerNameIn").value || "PLAYER 2").trim().toUpperCase(); const code = (document.getElementById("roomCodeIn").value || "").trim(); if (code.length !== 4) { document.getElementById("mpStatus").innerText = "ENTER 4-DIGIT CODE"; return; } connectMqttRoom(code, false); }
 function syncMulti() { if (!roomCode) return; sendRoomPacket({ t: "pos", id: myNetId, name: myName, x: px, y: py, z: pz, yaw: yaw, skin: mySkinId, emote: myEmote, carIdx: inCar ? cars.indexOf(inCar) : -1, carRot: inCar ? inCar.rot : 0 }); if (isHost && started) { const list = enemies.map(e => ({ x: Math.round(e.x * 10) / 10, z: Math.round(e.z * 10) / 10, hp: e.hp, zType: e.zType, isBoss: e.isBoss, phase: e.phase })); sendRoomPacket({ t: "zsync", id: myNetId, list: list, left: enemiesLeft, pOpen: !!(portal && portal.open) }); } }
-function speakVoice(t, p) { try { if (window.speechSynthesis) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.pitch = p || 0.85; u.rate = 0.95; window.speechSynthesis.speak(u); } } catch (e) {} }
+function playDialogBeep(baseFreq) { try { const ac = getAudio(); if (!ac) return; const now = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = "square"; const pitchVar = (baseFreq || 230) + (Math.random() - 0.5) * 40; o.frequency.setValueAtTime(pitchVar, now); g.gain.setValueAtTime(0.06, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.042); o.connect(g); g.connect(ac.destination); o.start(now); o.stop(now + 0.045); } catch (e) {} }
 function setBrightness(v) { document.getElementById("gameContainer").style.filter = "brightness(" + v + "%)"; }
 function enterFullscreen() { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(function(){}); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
 let audioCtx = null, menuMusicOn = true, menuMusicTimer = null, sunoLoaded = false;
@@ -240,190 +285,202 @@ function toggleRobotMod() { robotMod = !robotMod; const b = document.getElementB
 function toggleHorrorMod() { horrorMod = !horrorMod; const b = document.getElementById("btnHorror"); if (b) b.innerText = horrorMod ? "HORROR MOD: ON" : "HORROR MOD: OFF"; }
 function toggleGodMod() { godMod = !godMod; const b = document.getElementById("btnGod"); if (b) b.innerText = godMod ? "GOD MOD: ON" : "GOD MOD: OFF"; }
 const diffMults = { easy: { hp: 0.65, spd: 0.8, dmg: 0.5 }, medium: { hp: 1, spd: 1, dmg: 1 }, hard: { hp: 1.45, spd: 1.2, dmg: 1.4 }, insane: { hp: 2.1, spd: 1.42, dmg: 1.9 }, insanity: { hp: 2.6, spd: 1.5, dmg: 2.2 } };
-const storyChapters = new Array("CH 1: BLACKWOOD OUTPOST — Escape horde & unlock Green Bio-Bottle!", "CH 2: SCORCHED CANYON — Drive Escape Car through desert ambush!", "CH 3: ARCTIC FROST — Breach snow cabin & grab Bio-Bottle!", "CH 4: TOXIC BIO-SWAMP — Hold acid yard vs Shadow Zombies!", "CH 5: VOLCANIC OBSIDIAN — Clear lava ridge & grab Bio-Bottle!", "CH 6: BUNKER — Survive Acid Spitter swarm!", "CH 7: FOUNDRY — Crush Boomer wave with Squad Tank!", "CH 8: AIRFIELD — Outrun horde & unlock Bio-Bottle!", "CH 9: PRECINCT — Defend safe-house stairs & roof!", "CH 10: SECTOR 10 BOSS — Capture Enemy Tank Boss!", "CH 11: WATCHTOWER — Navigate fog & midnight rush!", "CH 12: RAILWAY — Smash blockade with Escape Car!", "CH 13: BIO-LAB — Recover emerald antidote bottle!", "CH 14: RELAY HILL — Repel Rogue Robot squad!", "CH 15: CANYON — Blast armored wave with Tank Shells!", "CH 16: HARBOR — Hold pier until Bio-Bottle opens!", "CH 17: POWER PLANT — Survive overload swarm!", "CH 18: MALL — Clear rooms & escape to courtyard!", "CH 19: CONVOY — Escort Squad Tank through fire!", "CH 20: DOUBLE TANK — Capture CH 20 Tank Boss!", "CH 21: DARK WOODS — Survive relentless horde rush!", "CH 22: ROBOT CORE — Destroy rogue battle mech squad!", "CH 23: OUTER WALLS — Breach Omega perimeter!", "CH 24: SANCTUM — Survive elite zombie & robot guard!", "CH 25: OMEGA CITADEL — Capture Final Boss Tank!");
-let mapTheme = { ground: new Array(0.09, 0.22, 0.11), fog: new Array(0.04, 0.09, 0.14), wall: new Array(0.34, 0.22, 0.14), isColosseum: false, sunPos: null };
-function updateQuestHud() { const qh = document.getElementById("questHud"); if (!qh) return; if (gameMode === "pvp") { qh.innerText = pvpLost ? "YOU LOST! Next PVP biome starting..." : (pvpSecondChance ? "COLOSSEUM PVP: SECOND CHANCE READY | GRAB SHIELD POWER-UPS!" : "COLOSSEUM PVP: LAST LIFE! NO SECOND CHANCE LEFT!"); return; } const rem = Math.max(0, enemiesLeft + enemies.length); qh.innerText = (portal && portal.open) ? "GREEN BIO-BOTTLE PORTAL OPEN! WALK INTO IT!" : "HOSTILES LEFT: " + rem + " | DRIVE TO ESCAPE HORDE!"; }
-function addFurnishedBuilding(bx, bz, roofCol) {
-  buildings.push({ x: bx, z: bz, roof: roofCol });
+const storyChapters = new Array("CH 1: SUNSET HIGHWAY", "CH 2: CANYON INTERSTATE", "CH 3: ALPINE VALLEY ROAD", "CH 4: EMERALD BAYOU ROUTE", "CH 5: ASHEN RIDGE HIGHWAY", "CH 6: SUBURBAN AVENUE", "CH 7: INDUSTRIAL EXPRESSWAY", "CH 8: AIRFIELD ROAD", "CH 9: DOWNTOWN BOULEVARD", "CH 10: SECTOR 10 TANK BOSS", "CH 11: MISTY OVERPASS", "CH 12: COASTAL HIGHWAY", "CH 13: BIO-RESEARCH PARK", "CH 14: RIDGEWAY", "CH 15: RED ROCK ROUTE", "CH 16: HARBOR ROAD", "CH 17: GRID STATION", "CH 18: TOWN SQUARE", "CH 19: HIGHWAY CONVOY", "CH 20: DOUBLE TANK BOSS", "CH 21: PINE FOREST ROAD", "CH 22: ROBOT CORE", "CH 23: OUTER HIGHWAY", "CH 24: SANCTUM AVENUE", "CH 25: OMEGA FINAL BOSS");
+let mapTheme = { groundHex: 0x2d5a27, skyHex: 0x7bc2f5, fogHex: 0x99ccf0, isColosseum: false };
+function updateQuestHud() { const qh = document.getElementById("questHud"); if (!qh) return; if (gameMode === "pvp") { qh.innerText = pvpLost ? "YOU LOST! Next PVP biome starting..." : (pvpSecondChance ? "COLOSSEUM PVP: SECOND CHANCE READY" : "COLOSSEUM PVP: LAST LIFE!"); return; } const rem = Math.max(0, enemiesLeft + enemies.length); qh.innerText = (portal && portal.open) ? "GREEN BIO-BOTTLE PORTAL OPEN! WALK INTO IT!" : "HOSTILES LEFT: " + rem + " | DRIVE DOWN THE HIGHWAY!"; }
+function addRealisticHouse(bx, bz, roofHex) {
+  buildings.push({ x: bx, z: bz, roofHex: roofHex });
   walls.push({ x1: bx - 6, z1: bz - 6, x2: bx + 6, z2: bz - 6 }, { x1: bx - 6, z1: bz - 6, x2: bx - 6, z2: bz + 6 }, { x1: bx + 6, z1: bz - 6, x2: bx + 6, z2: bz + 6 }, { x1: bx - 6, z1: bz + 6, x2: bx - 1.3, z2: bz + 6 }, { x1: bx + 1.3, z1: bz + 6, x2: bx + 6, z2: bz + 6 }, { x1: bx - 6, z1: bz, x2: bx - 1.2, z2: bz });
   doors.push({ x: bx - 1.2, z: bz + 6, open: false, ang: 0 }, { x: bx - 1.2, z: bz, open: false, ang: 0 });
   stairs.push({ x: bx + 4.3, z1: bz + 3.5, z2: bz - 3.5 });
-  props.push({ x: bx - 3.5, z: bz - 3.5, y: 0.45, sx: 2.2, sy: 0.9, sz: 1.2, col: new Array(0.45, 0.26, 0.12) }, { x: bx - 3.5, z: bz + 3.2, y: 0.55, sx: 1.4, sy: 1.1, sz: 1.4, col: new Array(0.25, 0.35, 0.45) }, { x: bx - 2.5, z: bz - 3.0, y: 4.45, sx: 2.0, sy: 0.9, sz: 1.2, col: new Array(0.15, 0.55, 0.45) });
+}
+function addMeshBox(grp, w, h, d, col, x, y, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: col, roughness: 0.85 })); m.position.set(x, y, z); grp.add(m); return m; }
+function rebuildThreeWorld() {
+  if (!worldGroup || typeof THREE === "undefined") return;
+  while (worldGroup.children.length > 0) worldGroup.remove(worldGroup.children.at(0));
+  grassTufts = new Array();
+  const isDark = (horrorMod || difficulty === "insanity") && !mapTheme.isColosseum;
+  const skyC = isDark ? 0x060912 : mapTheme.skyHex, fogC = isDark ? 0x080c18 : mapTheme.fogHex;
+  scene.background = new THREE.Color(skyC); scene.fog = new THREE.FogExp2(fogC, mapTheme.isColosseum ? 0.004 : (isDark ? 0.022 : 0.0075));
+  if (skyMesh) skyMesh.material.color.setHex(skyC);
+  const gMat = new THREE.MeshStandardMaterial({ map: mapTheme.isColosseum ? null : grassTex, color: mapTheme.isColosseum ? mapTheme.groundHex : (isDark ? 0x162b16 : 0xffffff), roughness: 0.92 });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), gMat); ground.rotation.x = -Math.PI / 2; worldGroup.add(ground);
+  if (mapTheme.isColosseum) {
+    walls.forEach(w => { const len = Math.hypot(w.x2 - w.x1, w.z2 - w.z1), wh = w.h || 11.5; const m = addMeshBox(worldGroup, len + 0.8, wh, 2.2, 0xd4c2a1, (w.x1 + w.x2) / 2, wh / 2, (w.z1 + w.z2) / 2); m.rotation.y = -Math.atan2(w.z2 - w.z1, w.x2 - w.x1); });
+    props.forEach(pr => { const col = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.25, pr.sy, 14), new THREE.MeshStandardMaterial({ color: 0xdfd0b4 })); col.position.set(pr.x, pr.y, pr.z); worldGroup.add(col); });
+    return;
+  }
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(14, 650), new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.85 }));
+  road.rotation.x = -Math.PI / 2; road.position.y = 0.03; worldGroup.add(road);
+  addMeshBox(worldGroup, 3.5, 0.16, 650, 0x9aa0a6, -8.75, 0.08, 0); addMeshBox(worldGroup, 3.5, 0.16, 650, 0x9aa0a6, 8.75, 0.08, 0);
+  Array.from({ length: 14 }, (_, i) => { const lz = -160 + i * 26, side = (i % 2 === 0) ? -9.5 : 9.5; addMeshBox(worldGroup, 0.24, 6.5, 0.24, 0x37474f, side, 3.25, lz); addMeshBox(worldGroup, 0.6, 0.3, 0.6, 0xfff3b0, side + (side < 0 ? 1.1 : -1.1), 6.4, lz); });
+  buildings.forEach(b => {
+    const bMat = new THREE.MeshStandardMaterial({ map: brickTex, roughness: 0.8 });
+    const mkW = function(w, d, x, z) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 7.6, d), bMat); m.position.set(x, 3.8, z); worldGroup.add(m); };
+    mkW(12.2, 0.4, b.x, b.z - 6); mkW(0.4, 12.2, b.x - 6, b.z); mkW(0.4, 12.2, b.x + 6, b.z); mkW(4.8, 0.4, b.x - 3.6, b.z + 6); mkW(4.8, 0.4, b.x + 3.6, b.z + 6);
+    addMeshBox(worldGroup, 11.6, 0.3, 11.6, 0x5d4037, b.x, 4.0, b.z);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(9.4, 3.8, 4), new THREE.MeshStandardMaterial({ color: b.roofHex || 0x4e2618, roughness: 0.85 }));
+    roof.position.set(b.x, 9.5, b.z); roof.rotation.y = Math.PI / 4; worldGroup.add(roof);
+    addMeshBox(worldGroup, 1.8, 1.5, 0.48, 0xffe082, b.x - 3.6, 2.2, b.z + 6); addMeshBox(worldGroup, 1.8, 1.5, 0.48, 0xffe082, b.x + 3.6, 2.2, b.z + 6);
+    addMeshBox(worldGroup, 5.0, 0.28, 2.2, 0x8d6e63, b.x, 0.14, b.z + 7.1);
+  });
+  trees.forEach(t => {
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 4.6, 10), new THREE.MeshStandardMaterial({ color: 0x4e342e })); trunk.position.set(t.x, 2.3, t.z); worldGroup.add(trunk);
+    const fMat = new THREE.MeshStandardMaterial({ color: 0x245e28 });
+    const c1 = new THREE.Mesh(new THREE.ConeGeometry(3.2, 4.2, 9), fMat); c1.position.set(t.x, 5.4, t.z); worldGroup.add(c1);
+    const c2 = new THREE.Mesh(new THREE.ConeGeometry(2.4, 3.6, 9), fMat); c2.position.set(t.x, 7.2, t.z); worldGroup.add(c2);
+  });
+  const bladeGeo = new THREE.ConeGeometry(0.16, 0.85, 4), bladeMat = new THREE.MeshStandardMaterial({ color: 0x4caf50 });
+  Array.from({ length: 240 }, (_, k) => { const gx = ((k * 37) % 140) - 70, gz = ((k * 53) % 180) - 90; if (Math.abs(gx) < 10.5) return; const tuft = new THREE.Mesh(bladeGeo, bladeMat); tuft.position.set(gx, 0.42, gz); tuft.userData = { bx: gx, bz: gz, ph: k * 0.4 }; worldGroup.add(tuft); grassTufts.push(tuft); });
 }
 function buildLevel(lvl) {
-  trees = new Array(); buildings = new Array(); doors = new Array(); stairs = new Array(); props = new Array(); walls = new Array(); pickups = new Array(); enemies = new Array(); bullets = new Array(); tankShells = new Array(); cars = new Array(); portal = null; tgBoss = null; tankBoss = null; inCar = null; vortexOrb = null; px = 0; pz = 0; floorH = 0; py = 1.75; vy = 0; onGround = true;
+  trees = new Array(); buildings = new Array(); doors = new Array(); stairs = new Array(); props = new Array(); walls = new Array(); pickups = new Array(); enemies = new Array(); bullets = new Array(); tankShells = new Array(); cars = new Array(); portal = null; tgBoss = null; tankBoss = null; inCar = null; vortexOrb = null; px = 0; pz = 12; floorH = 0; py = 1.75; vy = 0; onGround = true;
   if (gameMode === "pvp") {
-    const pvpBiomes = new Array(
-      { name: "PVP: RUINED ROMAN COLOSSEUM", ground: new Array(0.76, 0.64, 0.42), fog: new Array(0.45, 0.72, 0.96), wall: new Array(0.82, 0.75, 0.62) },
-      { name: "PVP: SCORCHED DESERT RUINS", ground: new Array(0.68, 0.44, 0.20), fog: new Array(0.85, 0.58, 0.28), wall: new Array(0.55, 0.34, 0.18) },
-      { name: "PVP: FROZEN GLACIER ARENA", ground: new Array(0.78, 0.88, 0.96), fog: new Array(0.55, 0.74, 0.92), wall: new Array(0.42, 0.64, 0.82) },
-      { name: "PVP: VOLCANIC LAVA CITADEL", ground: new Array(0.18, 0.10, 0.10), fog: new Array(0.35, 0.10, 0.05), wall: new Array(0.45, 0.16, 0.10) },
-      { name: "PVP: NEON CYBER COLOSSEUM", ground: new Array(0.08, 0.12, 0.22), fog: new Array(0.04, 0.08, 0.18), wall: new Array(0.0, 0.75, 0.95) }
-    );
-    const pb = pvpBiomes.at(pvpWins % pvpBiomes.length);
-    mapTheme = { ground: pb.ground, fog: pb.fog, wall: pb.wall, isColosseum: true, sunPos: new Array(28, 42, -32) };
-    const rad = 36;
-    Array.from({ length: 24 }, (_, i) => {
-      const a1 = (i / 24) * Math.PI * 2, a2 = ((i + 1) / 24) * Math.PI * 2;
-      const x1 = Math.cos(a1) * rad, z1 = Math.sin(a1) * rad, x2 = Math.cos(a2) * rad, z2 = Math.sin(a2) * rad;
-      const ruined = (i >= 3 && i <= 7);
-      walls.push({ x1: x1, z1: z1, x2: x2, z2: z2, h: ruined ? 2.4 : 11.5 });
-      if (ruined) props.push({ x: (x1 + x2) * 0.45, z: (z1 + z2) * 0.45, y: 0.9, sx: 3.2, sy: 1.8, sz: 2.6, col: pb.wall });
-    });
-    Array.from({ length: 6 }, (_, k) => { const a = (k / 6) * Math.PI * 2; props.push({ x: Math.cos(a) * 14, z: Math.sin(a) * 14, y: 2.2, sx: 2.0, sy: 4.4, sz: 2.0, col: pb.wall }); });
-    cars.push({ x: 10, z: 0, rot: 0, hp: 500, col: new Array(0.88, 0.12, 0.14), hex: "#ff1744", isTank: false });
-    cars.push({ x: -10, z: 0, rot: 0, turretRot: 0, hp: 3000, col: new Array(0.22, 0.34, 0.2), hex: "#33691e", isTank: true });
+    const pvpBiomes = new Array({ name: "PVP: RUINED ROMAN COLOSSEUM", groundHex: 0xc2a36b, skyHex: 0x6fb8f2, fogHex: 0x99ccf5 }, { name: "PVP: SCORCHED DESERT RUINS", groundHex: 0xb87638, skyHex: 0xd9924c, fogHex: 0xe3a86b }, { name: "PVP: FROZEN GLACIER ARENA", groundHex: 0xc7e0f4, skyHex: 0x8cc2eb, fogHex: 0xb8dcf7 }, { name: "PVP: VOLCANIC LAVA CITADEL", groundHex: 0x2e1919, skyHex: 0x59190d, fogHex: 0x732212 }, { name: "PVP: NEON CYBER COLOSSEUM", groundHex: 0x141e38, skyHex: 0x0a142e, fogHex: 0x0e1d42 });
+    const pb = pvpBiomes.at(pvpWins % pvpBiomes.length); mapTheme = { groundHex: pb.groundHex, skyHex: pb.skyHex, fogHex: pb.fogHex, isColosseum: true };
+    Array.from({ length: 24 }, (_, i) => { const a1 = (i / 24) * Math.PI * 2, a2 = ((i + 1) / 24) * Math.PI * 2; walls.push({ x1: Math.cos(a1) * 36, z1: Math.sin(a1) * 36, x2: Math.cos(a2) * 36, z2: Math.sin(a2) * 36, h: (i >= 3 && i <= 7) ? 2.4 : 11.5 }); });
+    Array.from({ length: 6 }, (_, k) => { const a = (k / 6) * Math.PI * 2; props.push({ x: Math.cos(a) * 14, z: Math.sin(a) * 14, y: 2.2, sx: 2.0, sy: 4.4, sz: 2.0 }); });
+    cars.push({ x: 10, z: 0, rot: 0, hp: 500, hexNum: 0xe53935, hex: "#ff1744", isTank: false }, { x: -10, z: 0, rot: 0, turretRot: 0, hp: 3000, hexNum: 0x3b5936, hex: "#33691e", isTank: true });
     pickups.push({ x: 0, z: 18, type: "shield", done: false }, { x: 0, z: -18, type: "shield", done: false }, { x: 18, z: 0, type: "boost", done: false }, { x: -18, z: 0, type: "chest", done: false });
-    locName = pb.name + " (WINS: " + pvpWins + ")";
-    document.getElementById("locHud").innerText = locName; document.getElementById("tankHud").style.display = "none";
-    enemiesLeft = 0; updateQuestHud(); return;
+    locName = pb.name + " (WINS: " + pvpWins + ")"; document.getElementById("locHud").innerText = locName; document.getElementById("tankHud").style.display = "none"; enemiesLeft = 0; rebuildThreeWorld(); updateQuestHud(); return;
   }
-  const themes = new Array(
-    { ground: new Array(0.09, 0.22, 0.11), fog: new Array(0.04, 0.09, 0.14), wall: new Array(0.34, 0.22, 0.14) },
-    { ground: new Array(0.58, 0.42, 0.22), fog: new Array(0.32, 0.22, 0.12), wall: new Array(0.46, 0.28, 0.16) },
-    { ground: new Array(0.72, 0.80, 0.88), fog: new Array(0.45, 0.55, 0.68), wall: new Array(0.28, 0.36, 0.46) },
-    { ground: new Array(0.10, 0.24, 0.16), fog: new Array(0.04, 0.14, 0.08), wall: new Array(0.22, 0.30, 0.22) },
-    { ground: new Array(0.16, 0.10, 0.10), fog: new Array(0.18, 0.05, 0.03), wall: new Array(0.26, 0.14, 0.12) }
-  );
-  const th = themes.at((lvl - 1) % themes.length);
-  mapTheme = { ground: th.ground, fog: th.fog, wall: th.wall, isColosseum: false, sunPos: null };
-  const s = 44; walls.push({ x1: -s, z1: -s, x2: s, z2: -s }, { x1: -s, z1: s, x2: s, z2: s }, { x1: -s, z1: -s, x2: -s, z2: s }, { x1: s, z1: -s, x2: s, z2: s });
-  const shift = ((lvl * 7) % 16) - 8;
-  walls.push({ x1: -14 + shift, z1: -10, x2: -14 + shift, z2: 8 }, { x1: 12, z1: 12 + shift, x2: 26, z2: 12 + shift });
-  addFurnishedBuilding(20, -18 + shift, new Array(0.26, 0.14, 0.08)); addFurnishedBuilding(-24, 18 - shift, new Array(0.18, 0.24, 0.32));
-  Array.from({ length: 18 }, (_, i) => { const ang = (i * 2.39996) + lvl * 1.3, dist = 26 + ((i + lvl) % 6) * 2.5; trees.push({ x: Math.cos(ang) * dist, z: Math.sin(ang) * dist }); });
-  cars.push({ x: 8, z: -6, rot: 0, hp: 500, col: new Array(0.88, 0.12, 0.14), hex: "#ff1744", isTank: false });
-  cars.push({ x: -7, z: -7, rot: 0, turretRot: 0, hp: 3000, col: new Array(0.22, 0.34, 0.2), hex: "#33691e", isTank: true });
-  pickups.push({ x: 22.5, z: -21 + shift, type: "chest", done: false }, { x: -21, z: 21 - shift, type: "chest", done: false });
-  if (gameMode === "token" || horrorMod) pickups.push({ x: 0, z: -12, type: "token", done: false });
-  portal = { x: shift, z: -34, open: false };
-  locName = storyChapters.at((lvl - 1) % storyChapters.length);
+  const roadBiomes = new Array({ groundHex: 0x2d5a27, skyHex: 0x7bc2f5, fogHex: 0x99ccf0 }, { groundHex: 0x9c7240, skyHex: 0xd99b52, fogHex: 0xe6b478 }, { groundHex: 0xc5d9e8, skyHex: 0x8abbe3, fogHex: 0xb5d6f0 }, { groundHex: 0x23472d, skyHex: 0x4b7862, fogHex: 0x689680 }, { groundHex: 0x2b1d1d, skyHex: 0x5c2316, fogHex: 0x783222 });
+  const rb = roadBiomes.at((lvl - 1) % roadBiomes.length); mapTheme = { groundHex: rb.groundHex, skyHex: rb.skyHex, fogHex: rb.fogHex, isColosseum: false };
+  const shift = ((lvl * 7) % 16) - 8; addRealisticHouse(-20, -18 + shift, 0x5e2c1d); addRealisticHouse(20, 14 - shift, 0x2c3e50); addRealisticHouse(-22, 34 + shift, 0x4a3525);
+  Array.from({ length: 34 }, (_, i) => { const side = (i % 2 === 0) ? -1 : 1, tx = side * (14 + ((i * 11) % 38)), tz = -110 + i * 7; if (Math.abs(tx + 20) < 10 && Math.abs(tz + 18 - shift) < 10) return; if (Math.abs(tx - 20) < 10 && Math.abs(tz - 14 + shift) < 10) return; trees.push({ x: tx, z: tz }); });
+  cars.push({ x: -3.2, z: 4, rot: 0, hp: 500, hexNum: 0xe53935, hex: "#ff1744", isTank: false }, { x: 3.4, z: 2, rot: 0, turretRot: 0, hp: 3000, hexNum: 0x3b5936, hex: "#33691e", isTank: true });
+  pickups.push({ x: -18, z: -20 + shift, type: "chest", done: false }, { x: 18, z: 16 - shift, type: "chest", done: false });
+  if (gameMode === "token" || horrorMod) pickups.push({ x: 0, z: -14, type: "token", done: false });
+  portal = { x: 0, z: -58, open: false }; locName = storyChapters.at((lvl - 1) % storyChapters.length);
   document.getElementById("locHud").innerText = locName; document.getElementById("tankHud").style.display = "none";
-  if ((gameMode === "campaign" && lvl === 25) || (lvl % 10 === 0)) { tankBoss = { x: 0, z: -26, rot: 0, turretRot: 0, hp: 5000, maxHp: 5000, fireCd: 110 }; document.getElementById("tankHud").style.display = "block"; document.getElementById("tankHud").innerText = "ENEMY TANK BOSS: 5000 / 5000 HP"; enemiesLeft = 8; }
+  if ((gameMode === "campaign" && lvl === 25) || (lvl % 10 === 0)) { tankBoss = { x: 0, z: -42, rot: 0, turretRot: 0, hp: 5000, maxHp: 5000, fireCd: 110 }; document.getElementById("tankHud").style.display = "block"; document.getElementById("tankHud").innerText = "ENEMY TANK BOSS: 5000 / 5000 HP"; enemiesLeft = 8; }
   else { enemiesLeft = 14 + Math.min(40, lvl * 3); }
-  updateQuestHud();
+  rebuildThreeWorld(); updateQuestHud();
 }
-function drawRiggedGL(x, z, type, sc, phase, yBase, fixedYaw, skinId, emoteId) {
-  const isRob = (type === "robot"), isTG = (type === "tg"), isMate = (type === "mate");
-  const sk = isMate ? getSkinColors(skinId) : null;
+function spawnGlbActor(modelObj, x, y, z, rotY, sc, tintHex, phase) {
+  const clone = modelObj.clone();
+  const walkBob = Math.abs(Math.sin(Date.now() * 0.008 + phase)) * 0.09;
+  const tilt = Math.sin(Date.now() * 0.008 + phase) * 0.06;
+  clone.position.set(x, y + walkBob, z);
+  clone.rotation.set(tilt, rotY, tilt * 0.5);
+  clone.scale.multiplyScalar(sc);
+  if (tintHex && tintHex !== 0xffffff) {
+    clone.traverse(function(ch) {
+      if (ch.isMesh && ch.material) {
+        ch.material = ch.material.clone();
+        ch.material.color.lerp(new THREE.Color(tintHex), 0.45);
+      }
+    });
+  }
+  dynGroup.add(clone);
+}
+function drawActorThree(x, z, type, sc, phase, yBase, fixedYaw, skinId, emoteId) {
   const ang = (fixedYaw !== undefined) ? fixedYaw : Math.atan2(px - x, pz - z);
   const w = Date.now() * 0.008 + phase, yb = yBase || 0;
-  const cMap = { tg: new Array(0.95,0.78,0.1), gold: new Array(0.95,0.78,0.12), boomer: new Array(0.68,0.16,0.10), acid: new Array(0.16,0.42,0.20), shadow: new Array(0.12,0.08,0.20), robot: new Array(0.32,0.40,0.48), zombie: new Array(0.22,0.30,0.38) };
-  const sMap = { tg: new Array(0.84,0.65,0.48), gold: new Array(1.0,0.86,0.25), boomer: new Array(0.55,0.42,0.36), acid: new Array(0.45,0.72,0.42), shadow: new Array(0.26,0.18,0.34), robot: new Array(0.62,0.70,0.76), zombie: new Array(0.44,0.54,0.42) };
-  const cJacket = isMate ? sk.suit : (Reflect.get(cMap, type) || cMap.zombie);
-  const cSkin = isMate ? sk.skin : (Reflect.get(sMap, type) || sMap.zombie);
-  const cPants = isMate ? sk.pants : new Array(0.14, 0.18, 0.24);
-  const cHair = isMate ? sk.hair : new Array(0.15, 0.13, 0.11);
-  const cEye = isMate ? new Array(0.12,0.22,0.35) : isRob ? new Array(0,0.9,1) : new Array(0.95,0.18,0.18);
   const em = emoteId || 0, emType = em > 0 ? ((em - 1) % 10) + 1 : 0;
   const spinAng = (emType === 5) ? ang + w * 2.5 : ang;
   const danceY = (emType === 2 || emType === 6) ? Math.abs(Math.sin(w * 2.2)) * 0.28 : 0;
-  const stride = Math.sin(w) * 0.32, knee = Math.abs(Math.cos(w)) * 0.14;
-  const cosP = Math.cos(spinAng + Math.PI / 2), sinP = Math.sin(spinAng + Math.PI / 2);
-  const cosF = Math.cos(spinAng), sinF = Math.sin(spinAng);
-  const pt = function(f, s, u) { return new Array(x + cosP * s * sc + sinF * f * sc, yb + danceY + u * sc, z + sinP * s * sc + cosF * f * sc); };
-  drawLimb(pt(0, 0.15, 0.98), pt(stride * 0.65, 0.15, 0.54 + knee), 0.21 * sc, cPants);
-  drawLimb(pt(stride * 0.65, 0.15, 0.54 + knee), pt(stride, 0.15, 0.10), 0.16 * sc, cPants);
-  drawLimb(pt(0, -0.15, 0.98), pt(-stride * 0.65, -0.15, 0.54 + knee), 0.21 * sc, cPants);
-  drawLimb(pt(-stride * 0.65, -0.15, 0.54 + knee), pt(-stride, -0.15, 0.10), 0.16 * sc, cPants);
-  const waist = pt(0, 0, 1.02), chest = pt(isMate ? 0.02 : 0.08, 0, 1.56), headC = pt(isMate ? 0.03 : 0.12, 0, 1.94);
-  drawLimb(waist, chest, (type === "boomer" ? 0.82 : 0.54) * sc, cJacket);
-  drawLimb(pt(isMate ? 0.02 : 0.10, 0, 1.72), headC, 0.15 * sc, cSkin);
-  const armUp = (em > 0 || glidingActive);
-  const lElb = pt(armUp ? 0.08 : -stride * 0.4, 0.40, armUp ? 1.88 : 1.32);
-  const rElb = pt(armUp ? 0.08 : stride * 0.4, -0.40, armUp ? 1.88 : 1.32);
-  const lHnd = pt(armUp ? 0.14 : (isMate ? -stride * 0.6 + 0.18 : 0.42), 0.42, armUp ? 2.18 : (isMate ? 1.06 : 1.44));
-  const rHnd = pt(armUp ? 0.14 : (isMate ? stride * 0.6 + 0.18 : 0.42), -0.42, armUp ? 2.18 : (isMate ? 1.06 : 1.44));
-  drawLimb(pt(0.02, 0.34, 1.62), lElb, 0.15 * sc, cJacket); drawLimb(lElb, lHnd, 0.12 * sc, cSkin);
-  drawLimb(pt(0.02, -0.34, 1.62), rElb, 0.15 * sc, cJacket); drawLimb(rElb, rHnd, 0.12 * sc, cSkin);
-  drawCyl(headC.at(0), headC.at(1), headC.at(2), 0.32 * sc, 0.36 * sc, 0.34 * sc, spinAng, cSkin);
-  const lEye = pt(isMate ? 0.18 : 0.27, 0.075, 1.98), rEye = pt(isMate ? 0.18 : 0.27, -0.075, 1.98);
-  drawCube(lEye.at(0), lEye.at(1), lEye.at(2), 0.055 * sc, 0.032 * sc, 0.03 * sc, spinAng, cEye);
-  drawCube(rEye.at(0), rEye.at(1), rEye.at(2), 0.055 * sc, 0.032 * sc, 0.03 * sc, spinAng, cEye);
-  const nose = pt(isMate ? 0.20 : 0.29, 0, 1.94), hCap = pt(isMate ? 0.01 : 0.10, 0, 2.13);
-  drawCube(nose.at(0), nose.at(1), nose.at(2), 0.05 * sc, 0.08 * sc, 0.07 * sc, spinAng, cSkin);
-  if (!isRob) drawCyl(hCap.at(0), hCap.at(1), hCap.at(2), 0.35 * sc, 0.14 * sc, 0.37 * sc, spinAng, isTG ? new Array(1,0.84,0) : cHair);
+  if (type === "mate" || type === "tg") {
+    const baseModel = (type === "tg") ? (glbModels.h1 || glbModels.h2) : ((Number(skinId) % 2 === 0 ? glbModels.h2 : glbModels.h1) || glbModels.h1 || glbModels.h2);
+    const tint = (type === "tg") ? 0xffd700 : getSkinHex(skinId);
+    if (baseModel) { spawnGlbActor(baseModel, x, yb + danceY, z, spinAng, sc, tint, phase); return; }
+  } else {
+    const zSlot = type === "boomer" ? glbModels.z2 : type === "acid" ? glbModels.z3 : type === "shadow" ? glbModels.z4 : (type === "gold" || sc > 1.4) ? glbModels.z5 : glbModels.z1;
+    const picked = zSlot || glbModels.z1 || glbModels.z2 || glbModels.z3 || glbModels.z4 || glbModels.z5;
+    const zTint = type === "gold" ? 0xffd700 : type === "boomer" ? 0xff5722 : type === "acid" ? 0x76ff03 : type === "shadow" ? 0x7c4dff : type === "robot" ? 0x00e5ff : 0xffffff;
+    if (picked) { spawnGlbActor(picked, x, yb, z, spinAng, sc, zTint, phase); return; }
+  }
+  const fb = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * sc, 0.32 * sc, 1.7 * sc, 10), new THREE.MeshStandardMaterial({ color: type === "mate" ? getSkinHex(skinId) : 0x3b6e3b }));
+  fb.position.set(x, yb + danceY + 0.9 * sc, z); dynGroup.add(fb);
 }
-function drawBattleBusGL(bx, by, bz) {
-  drawCube(bx, by, bz, 3.6, 2.5, 9.2, 0, new Array(0.08, 0.38, 0.88));
-  drawCyl(bx, by + 5.8, bz, 5.2, 3.8, 7.6, 0, new Array(0.0, 0.78, 1.0));
-  drawCube(bx, by + 3.6, bz, 0.4, 2.2, 0.4, 0, new Array(0.85, 0.85, 0.9));
-}
-function drawGliderGL(gx, gy, gz, skinId) {
-  const sk = getSkinColors(skinId);
-  drawWedge(gx, gy + 1.45, gz, 4.6, 0.22, 1.6, -yaw, sk.suit);
-  drawCube(gx, gy + 0.85, gz, 0.14, 1.2, 0.14, -yaw, new Array(0.85, 0.88, 0.92));
-}
-function drawGreenBottlePortal(px0, pz0, isOpen) {
-  const spin = Date.now() * 0.003, bob = Math.sin(Date.now() * 0.005) * 0.25;
-  drawCyl(px0, 1.4 + bob, pz0, 1.5, 2.2, 1.5, spin, isOpen ? new Array(0.0, 1.0, 0.35) : new Array(0.08, 0.35, 0.15));
-  drawCyl(px0, 2.8 + bob, pz0, 0.65, 0.85, 0.65, -spin, new Array(0.45, 1.0, 0.65));
-}
-function drawTankGL(tk) {
-  const c = Math.cos(tk.rot), s = Math.sin(tk.rot), tRot = (tk.turretRot !== undefined) ? tk.turretRot : tk.rot;
-  const ts = Math.sin(tRot), tc = Math.cos(tRot);
-  drawCube(tk.x, 0.95, tk.z, 3.8, 1.05, 6.2, -tk.rot, tk.col || new Array(0.22, 0.27, 0.2));
-  drawCube(tk.x + c * 2.1, 0.65, tk.z + s * 2.1, 0.75, 1.05, 6.6, -tk.rot, new Array(0.10, 0.11, 0.12));
-  drawCube(tk.x - c * 2.1, 0.65, tk.z - s * 2.1, 0.75, 1.05, 6.6, -tk.rot, new Array(0.10, 0.11, 0.12));
-  drawCyl(tk.x, 1.92, tk.z, 2.8, 0.95, 3.3, -tRot, new Array(0.28, 0.34, 0.25));
-  drawLimb(new Array(tk.x + ts * 1.4, 2.0, tk.z - tc * 1.4), new Array(tk.x + ts * 5.0, 2.0, tk.z - tc * 5.0), 0.32, new Array(0.16, 0.18, 0.16));
-}
-function drawCarGL(car) {
-  if (car.isTank) { drawTankGL(car); return; }
-  const c = Math.cos(car.rot), s = Math.sin(car.rot);
-  drawCube(car.x, 0.62, car.z, 2.12, 0.56, 4.6, -car.rot, car.col);
-  drawWedge(car.x + s * 1.65, 0.66, car.z - c * 1.65, 2.08, 0.52, 1.3, -car.rot + Math.PI, car.col);
-  drawWedge(car.x + s * 0.65, 1.14, car.z - c * 0.65, 1.78, 0.54, 0.95, -car.rot + Math.PI, new Array(0.10, 0.16, 0.22));
-  drawCube(car.x - s * 0.35, 1.14, car.z + c * 0.35, 1.78, 0.54, 1.15, -car.rot, car.col);
-  drawWedge(car.x - s * 1.35, 1.14, car.z + c * 1.35, 1.78, 0.54, 0.95, -car.rot, new Array(0.10, 0.16, 0.22));
-  drawCube(car.x - s * 2.15, 1.12, car.z + c * 2.15, 2.05, 0.08, 0.32, -car.rot, new Array(0.10, 0.10, 0.12));
-  drawCube(car.x + c * 0.78 + s * 2.28, 0.66, car.z + s * 0.78 - c * 2.28, 0.36, 0.16, 0.12, -car.rot, new Array(1.0, 0.96, 0.65));
-  drawCube(car.x - c * 0.78 + s * 2.28, 0.66, car.z - s * 0.78 - c * 2.28, 0.36, 0.16, 0.12, -car.rot, new Array(1.0, 0.96, 0.65));
-  drawCube(car.x + c * 0.78 - s * 2.30, 0.68, car.z + s * 0.78 + c * 2.30, 0.42, 0.16, 0.10, -car.rot, new Array(1.0, 0.08, 0.08));
-  drawCube(car.x - c * 0.78 - s * 2.30, 0.68, car.z - s * 0.78 + c * 2.30, 0.42, 0.16, 0.10, -car.rot, new Array(1.0, 0.08, 0.08));
-  const wPos = new Array(new Array(1.08, 1.42), new Array(-1.08, 1.42), new Array(1.08, -1.42), new Array(-1.08, -1.42));
-  wPos.forEach(wp => {
-    const wx = car.x + c * wp.at(0) + s * wp.at(1), wz = car.z + s * wp.at(0) - c * wp.at(1);
-    drawLimb(new Array(wx - c * 0.16, 0.42, wz - s * 0.16), new Array(wx + c * 0.16, 0.42, wz + s * 0.16), 0.78, new Array(0.08, 0.08, 0.10));
-    drawLimb(new Array(wx - c * 0.18, 0.42, wz - s * 0.18), new Array(wx + c * 0.18, 0.42, wz + s * 0.18), 0.44, new Array(0.80, 0.84, 0.90));
+function drawCarThree(car) {
+  const g = new THREE.Group(); g.position.set(car.x, 0, car.z); g.rotation.y = -car.rot;
+  if (car.isTank) {
+    const mat = new THREE.MeshStandardMaterial({ color: car.hexNum || 0x3b5936, roughness: 0.7, metalness: 0.35 });
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.1, 6.2), mat); hull.position.y = 0.95; g.add(hull);
+    const trkL = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.05, 6.6), new THREE.MeshStandardMaterial({ color: 0x181a1c })); trkL.position.set(2.1, 0.65, 0); g.add(trkL);
+    const trkR = trkL.clone(); trkR.position.x = -2.1; g.add(trkR);
+    const tur = new THREE.Group(); tur.position.set(0, 1.95, 0); tur.rotation.y = -((car.turretRot !== undefined ? car.turretRot : car.rot) - car.rot);
+    tur.add(new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.55, 0.95, 12), mat));
+    const brl = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 4.2, 10), new THREE.MeshStandardMaterial({ color: 0x262a2e, metalness: 0.7 }));
+    brl.rotation.x = Math.PI / 2; brl.position.set(0, 0.05, -2.5); tur.add(brl); g.add(tur); dynGroup.add(g); return;
+  }
+  const paint = new THREE.MeshStandardMaterial({ color: car.hexNum || 0xe53935, roughness: 0.25, metalness: 0.6 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x142230, roughness: 0.1, metalness: 0.85 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.62, 4.6), paint); body.position.y = 0.65; g.add(body);
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.76, 0.56, 2.25), glass); cabin.position.set(0, 1.18, 0.2); g.add(cabin);
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.08, 1.55), paint); roof.position.set(0, 1.48, 0.25); g.add(roof);
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.08, 0.34), new THREE.MeshStandardMaterial({ color: 0x111316 })); wing.position.set(0, 1.16, 2.15); g.add(wing);
+  const hlMat = new THREE.MeshBasicMaterial({ color: 0xfff8c4 }), tlMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
+  Array.from(new Array(-0.78, 0.78), sx => {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.12), hlMat); hl.position.set(sx, 0.68, -2.28); g.add(hl);
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.10), tlMat); tl.position.set(sx, 0.70, 2.30); g.add(tl);
   });
+  const tireMat = new THREE.MeshStandardMaterial({ color: 0x121417, roughness: 0.9 }), rimMat = new THREE.MeshStandardMaterial({ color: 0xd0d7de, metalness: 0.85 });
+  Array.from(new Array(new Array(1.06, -1.42), new Array(-1.06, -1.42), new Array(1.06, 1.42), new Array(-1.06, 1.42)), wp => {
+    const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.32, 14), tireMat); tire.rotation.z = Math.PI / 2; tire.position.set(wp.at(0), 0.42, wp.at(1)); g.add(tire);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.34, 10), rimMat); rim.rotation.z = Math.PI / 2; rim.position.set(wp.at(0), 0.42, wp.at(1)); g.add(rim);
+  });
+  dynGroup.add(g);
 }
-function drawFirstPersonGun() {
-  if (inCar || viewMode !== 1 || storyActive || glidingActive) return;
-  const sinY = Math.sin(yaw), cosY = Math.cos(yaw), cosP = Math.cos(pitch), sinP = Math.sin(pitch), fx = sinY * cosP, fy = sinP, fz = -cosY * cosP, rx = cosY, rz = sinY, ux = -sinY * sinP, uy = cosP, uz = cosY * sinP;
-  const rec = Math.max(0, 1 - (Date.now() - lastFire) / 130) * 0.10, rp = reloading ? Math.min(1, (Date.now() - reloadStart) / 750) : 0, tilt = Math.sin(rp * Math.PI) * 0.12;
-  const sideR = aiming ? 0.0 : 0.24, upOff = aiming ? -0.15 : -0.21;
-  const pPart = function(f, r, u, sx, sy, sz, col) { drawCube(px + fx * f + rx * r + ux * u, py + fy * f + uy * u, pz + fz * f + rz * r + uz * u, sx, sy, sz, -yaw, col); };
-  const pPt = function(f, r, u) { return new Array(px + fx * f + rx * r + ux * u, py + fy * f + uy * u, pz + fz * f + rz * r + uz * u); };
-  const sk = getSkinColors(mySkinId), steel = new Array(0.18, 0.21, 0.26), wood = new Array(0.44, 0.25, 0.13);
-  if (gunName === "COMBAT SHOTGUN") { pPart(0.72 - rec, sideR, upOff - tilt, 0.07, 0.07, 0.78, new Array(0.11, 0.13, 0.16)); pPart(0.46 - rec, sideR, upOff - 0.06 - tilt, 0.08, 0.12, 0.28, wood); }
-  else if (gunName === "PLASMA RIFLE") { pPart(0.70 - rec, sideR, upOff - tilt, 0.10, 0.13, 0.74, new Array(0.22, 0.27, 0.34)); pPart(0.74 - rec, sideR, upOff + 0.02 - tilt, 0.11, 0.05, 0.42, new Array(0, 0.85, 1)); }
-  else if (gunName === "MINIGUN") { pPart(0.64 - rec, sideR, upOff - 0.04 - tilt, 0.18, 0.18, 0.45, steel); pPart(0.92 - rec, sideR, upOff - 0.01 - tilt, 0.08, 0.08, 0.55, new Array(0.11, 0.13, 0.16)); }
-  else { pPart(0.62 - rec, sideR, upOff + 0.01 - tilt, 0.08, 0.08, 0.42, steel); pPart(0.50 - rec, sideR, upOff - 0.08 - tilt, 0.07, 0.16, 0.10, wood); }
-  drawLimb(pPt(0.18 - rec, sideR + 0.14, upOff - 0.22 - tilt), pPt(0.42 - rec, sideR + 0.03, upOff - 0.10 - tilt), 0.11, sk.suit);
-  drawLimb(pPt(0.42 - rec, sideR + 0.03, upOff - 0.10 - tilt), pPt(0.52 - rec, sideR + 0.01, upOff - 0.07 - tilt), 0.10, sk.skin);
-  const lHandF = reloading ? 0.54 : 0.74 - rec, lHandU = reloading ? (upOff - 0.18 + Math.sin(rp * Math.PI) * 0.18) : (upOff - 0.05 - tilt);
-  drawLimb(pPt(0.22 - rec, sideR - 0.22, upOff - 0.22), pPt(lHandF - 0.10, sideR - 0.08, lHandU - 0.04), 0.11, sk.suit);
-  drawLimb(pPt(lHandF - 0.10, sideR - 0.08, lHandU - 0.04), pPt(lHandF + 0.04, sideR - 0.02, lHandU), 0.10, sk.skin);
-  if (rec > 0.04) pPart(1.05, sideR, upOff + 0.01, 0.18, 0.18, 0.18, cyberMod ? new Array(0, 0.9, 1) : new Array(1, 0.82, 0.18));
+function drawFirstPersonGunThree() {
+  if (inCar || viewMode !== 1 || storyActive || glidingActive || !camera) return;
+  const g = new THREE.Group();
+  const rec = Math.max(0, 1 - (Date.now() - lastFire) / 130) * 0.08;
+  const rp = reloading ? Math.min(1, (Date.now() - reloadStart) / 750) : 0;
+  g.position.set(aiming ? 0.0 : 0.24, (aiming ? -0.16 : -0.22) - Math.sin(rp * Math.PI) * 0.12, -0.58 + rec);
+  const steel = new THREE.MeshStandardMaterial({ color: 0x262b33, metalness: 0.75, roughness: 0.3 });
+  const skinM = new THREE.MeshStandardMaterial({ color: 0xd8a684, roughness: 0.7 });
+  const bLen = gunName === "M1911 PISTOL" ? 0.36 : 0.72;
+  const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.09, bLen), steel); barrel.position.set(0, 0.02, -0.1); g.add(barrel);
+  const rHand = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.10, 0.14), skinM); rHand.position.set(0.02, -0.06, 0.06); g.add(rHand);
+  const lHand = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.09, 0.14), skinM); lHand.position.set(-0.04, -0.04, -0.18 + Math.sin(rp * Math.PI) * 0.14); g.add(lHand);
+  if (rec > 0.03) { const fl = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: cyberMod ? 0x00e5ff : 0xffd54f })); fl.position.set(0, 0.02, -0.52); g.add(fl); }
+  camera.add(g); dynGroup.userData.camGun = g;
 }
 function equipGun(t) { if (t === 1) { gunName = "M1911 PISTOL"; maxClip = 12; clip = 12; dmg = 55; } else if (t === 2) { gunName = "COMBAT SHOTGUN"; maxClip = 8; clip = 8; dmg = 140; } else if (t === 3) { gunName = "PLASMA RIFLE"; maxClip = 30; clip = 30; dmg = 95; } else { gunName = "MINIGUN"; maxClip = 80; clip = 80; dmg = 65; } reloading = false; playTone(760, 0.12, "triangle", 0.12); showMsg("EQUIPPED: " + gunName, 1800); }
-function endStoryCutscene() { if (!storyActive) return; storyActive = false; clearInterval(storyTimer); const sb = document.getElementById("storyBox"); if (sb) sb.style.display = "none"; if (gameMode === "pvp") { px = (Math.random() - 0.5) * 36; pz = (Math.random() - 0.5) * 36; py = 1.75; vy = 0; onGround = true; glidingActive = false; showMsg("COLOSSEUM FIGHT BEGINS! Grab Shield & Power-Ups — 1 Second Chance!", 4200); return; } glidingActive = true; py = 44.0; vy = -0.18; playTone(620, 0.35, "sine", 0.15); showMsg("GLIDER DEPLOYED! Steer with WASD down to your Sports Car or Squad Tank!", 3800); speakVoice("Glider deployed! Drive your car or Squad Tank to escape the horde!", 0.95); }
-function playStoryCutscene() { storyActive = true; glidingActive = false; py = 46.0; vy = 0; const sb = document.getElementById("storyBox"), cap = document.getElementById("storyCaption"), spk = document.getElementById("storySpeaker"); if (!sb || !cap) { storyActive = false; return; } sb.style.display = "block"; const allies = Object.values(remotePlayers).map(r => r.name || "CHALLENGER"); const foeName = (allies.length > 0) ? allies.join(" and ") : "CHALLENGER"; if (spk) spk.innerText = (gameMode === "pvp") ? "COLOSSEUM GRAND NARRATOR" : (myName || "SANTIAGO") + " — BATTLE BUS BRIEFING"; const lines = (gameMode === "pvp") ? new Array("Welcome to " + locName + "! Tonight: " + myName + " versus " + foeName + "!", "Grab Cyan Shield Power-Ups and Gold Damage Boosts! You get ONE Second Chance — lose twice and you lose!") : new Array(locName, (myName || "SANTIAGO") + " versus the Horde: Hop in the Sports Car or Heavy Battle Tank, then grab the Green Bio-Bottle Portal!", "Drop in on my mark—good luck out there!"); let lineIdx = 0, charIdx = 0; cap.innerText = ""; speakVoice(lines.join(" "), 0.88); clearInterval(storyTimer); storyTimer = setInterval(function() { if (!storyActive) { clearInterval(storyTimer); return; } const cur = lines.at(lineIdx); if (cur && charIdx < cur.length) { cap.innerText += cur.charAt(charIdx++); } else { lineIdx++; if (lineIdx >= lines.length) { setTimeout(endStoryCutscene, 1500); clearInterval(storyTimer); } else { setTimeout(function() { if (storyActive) { cap.innerText = ""; charIdx = 0; } }, 900); } } }, 34); }
+function endStoryCutscene() { if (!storyActive) return; storyActive = false; clearInterval(storyTimer); const sb = document.getElementById("storyBox"); if (sb) sb.style.display = "none"; if (gameMode === "pvp") { px = (Math.random() - 0.5) * 36; pz = (Math.random() - 0.5) * 36; py = 1.75; vy = 0; onGround = true; glidingActive = false; showMsg("COLOSSEUM FIGHT BEGINS! Grab Shield & Power-Ups — 1 Second Chance!", 4200); return; } glidingActive = true; py = 44.0; vy = -0.18; playTone(620, 0.35, "sine", 0.15); showMsg("GLIDER DEPLOYED! Steer down to the Highway Sports Car or Squad Tank!", 3800); }
+function playStoryCutscene() {
+  storyActive = true; glidingActive = false; py = 46.0; vy = 0;
+  const sb = document.getElementById("storyBox"), cap = document.getElementById("storyCaption"), spk = document.getElementById("storySpeaker");
+  if (!sb || !cap) { storyActive = false; return; }
+  sb.style.display = "block";
+  const allies = Object.values(remotePlayers).map(r => r.name || "CHALLENGER");
+  const foeName = (allies.length > 0) ? allies.join(" & ") : "CHALLENGER";
+  if (spk) spk.innerText = (gameMode === "pvp") ? "* COLOSSEUM GRAND NARRATOR *" : "* " + (myName || "SANTIAGO") + " — HIGHWAY BRIEFING *";
+  const lines = (gameMode === "pvp")
+    ? new Array("* WELCOME TO " + locName + "! TONIGHT: " + myName + " VERSUS " + foeName + "!", "* GRAB CYAN SHIELD POWER-UPS & GOLD BOOSTS! YOU GET ONE SECOND CHANCE — LOSE TWICE AND YOU LOSE!")
+    : new Array("* " + locName, "* " + (myName || "SANTIAGO") + " VERSUS THE HORDE: HOP IN THE SPORTS CAR OR HEAVY TANK ON THE HIGHWAY, THEN REACH THE GREEN BIO-BOTTLE PORTAL!");
+  const beepPitch = (gameMode === "pvp") ? 175 : 265;
+  let lineIdx = 0, charIdx = 0; cap.innerText = "";
+  clearInterval(storyTimer);
+  storyTimer = setInterval(function() {
+    if (!storyActive) { clearInterval(storyTimer); return; }
+    const cur = lines.at(lineIdx);
+    if (cur && charIdx < cur.length) {
+      const ch = cur.charAt(charIdx++); cap.innerText += ch;
+      if (ch !== " " && charIdx % 2 === 1) playDialogBeep(beepPitch);
+    } else {
+      lineIdx++;
+      if (lineIdx >= lines.length) { setTimeout(endStoryCutscene, 1400); clearInterval(storyTimer); }
+      else { setTimeout(function() { if (storyActive) { cap.innerText = ""; charIdx = 0; } }, 850); }
+    }
+  }, 36);
+}
 function startGame(mode, fromNet) { myName = (document.getElementById("playerNameIn").value || "SANTIAGO").trim().toUpperCase(); gameMode = mode || "campaign"; started = true; hp = 100; shield = (gameMode === "pvp") ? 50 : 100; pvpSecondChance = true; pvpLost = false; powerBoost = 0; level = 1; clip = 12; maxClip = 12; reserve = 180; dmg = 55; gunName = "M1911 PISTOL"; document.getElementById("lobby").style.display = "none"; glCv.style.display = (viewMode > 0) ? "block" : "none"; c2d.style.display = (viewMode === 0) ? "block" : "none"; document.getElementById("crosshair").style.display = (viewMode > 0) ? "block" : "none"; if (touchForced || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) document.getElementById("touchUI").style.display = "block"; if (isHost && !fromNet && roomCode) sendRoomPacket({ t: "start", id: myNetId, mode: gameMode }); buildLevel(1); playStoryCutscene(); if (!window.loopStarted) { window.loopStarted = true; setInterval(spawnEnemy, 950); mainLoop(); } }
-function spawnEnemy() { if (!started || gameMode === "pvp" || storyActive || glidingActive || hp <= 0 || enemiesLeft <= 0 || enemies.length >= 28) return; if (roomCode && !isHost) return; const dm = Reflect.get(diffMults, difficulty) || diffMults.medium, r = Math.random(); let zType = "zombie", hpM = 1, spdM = 1; if (robotMod || gameMode === "robots" || (gameMode === "campaign" && level === 22) || r < 0.22) { zType = "robot"; hpM = 1.4; spdM = 1.18; } else if (r < 0.28) { zType = "gold"; hpM = 1.6; spdM = 1.48; showMsg("RARE GOLD ZOMBIE SPOTTED!", 2200); } else if (r < 0.37) { zType = "boomer"; hpM = 1.1; spdM = 1.1; } else if (r < 0.46) { zType = "acid"; hpM = 1.25; spdM = 1.15; } else if (r < 0.54) { zType = "shadow"; hpM = 0.9; spdM = 1.7; } const isBoss = (level % 10 === 0 && !tankBoss) || (titanMod && r < 0.35), ang = Math.random() * Math.PI * 2, dist = 28; enemies.push({ x: Math.max(-40, Math.min(40, px + Math.cos(ang) * dist)), z: Math.max(-40, Math.min(40, pz + Math.sin(ang) * dist)), hp: Math.ceil((isBoss ? (titanMod ? 3800 : 2400) : (90 + level * 15) * hpM) * dm.hp), zType: zType, isBoss: isBoss, isTitan: titanMod && isBoss, spd: (isBoss ? 0.06 : 0.068 * spdM) * dm.spd, phase: Math.random() * 6.28, freeze: 0 }); enemiesLeft--; updateQuestHud(); }
+function spawnEnemy() { if (!started || gameMode === "pvp" || storyActive || glidingActive || hp <= 0 || enemiesLeft <= 0 || enemies.length >= 28) return; if (roomCode && !isHost) return; const dm = Reflect.get(diffMults, difficulty) || diffMults.medium, r = Math.random(); let zType = "zombie", hpM = 1, spdM = 1; if (robotMod || gameMode === "robots" || (gameMode === "campaign" && level === 22) || r < 0.22) { zType = "robot"; hpM = 1.4; spdM = 1.18; } else if (r < 0.28) { zType = "gold"; hpM = 1.6; spdM = 1.48; showMsg("RARE GOLD ZOMBIE SPOTTED!", 2200); } else if (r < 0.37) { zType = "boomer"; hpM = 1.1; spdM = 1.1; } else if (r < 0.46) { zType = "acid"; hpM = 1.25; spdM = 1.15; } else if (r < 0.54) { zType = "shadow"; hpM = 0.9; spdM = 1.7; } const isBoss = (level % 10 === 0 && !tankBoss) || (titanMod && r < 0.35), ang = Math.random() * Math.PI * 2, dist = 34; enemies.push({ x: Math.max(-65, Math.min(65, px + Math.cos(ang) * dist)), z: Math.max(-140, Math.min(140, pz + Math.sin(ang) * dist)), hp: Math.ceil((isBoss ? (titanMod ? 3800 : 2400) : (90 + level * 15) * hpM) * dm.hp), zType: zType, isBoss: isBoss, isTitan: titanMod && isBoss, spd: (isBoss ? 0.06 : 0.068 * spdM) * dm.spd, phase: Math.random() * 6.28, freeze: 0 }); enemiesLeft--; updateQuestHud(); }
 window.addEventListener("blur", function() { Object.keys(keys).forEach(k => { Reflect.set(keys, k, false); }); draggingLook = false; tDX = 0; tDY = 0; setAimState(false); });
 function jump3D() { if (!inCar && !glidingActive && onGround) { vy = 0.24; onGround = false; } }
 function reloadAny() { if (reloading || clip >= maxClip || reserve <= 0) return; setAimState(false); reloading = true; reloadStart = Date.now(); const rTime = turboMod ? 340 : 750; playTone(520, 0.12, "triangle", 0.13); setTimeout(function() { const add = Math.min(maxClip - clip, reserve); clip += add; reserve -= add; reloading = false; playTone(1080, 0.12, "triangle", 0.15); }, rTime); }
 function triggerVortex() { if (!gravMod && !godMod) { showMsg("Turn on GRAVITY VORTEX MOD in Lobby first!", 1800); return; } if (vortexCd > 0) { showMsg("VORTEX RECHARGING...", 900); return; } vortexCd = 240; const vx = px + Math.sin(yaw) * 11, vz = pz - Math.cos(yaw) * 11; vortexOrb = { x: vx, z: vz, life: 130 }; playTone(140, 0.6, "sine", 0.22, 420); showMsg("GRAVITY BLACK-HOLE VORTEX DEPLOYED!", 1800); }
-function useAny() { if (inCar) { px = inCar.x + 3.2; pz = inCar.z; inCar = null; py = floorH + 1.75; showMsg("Exited vehicle!", 1800); return; } const dHit = doors.find(d => Math.hypot(px - (d.x + 1.2), pz - d.z) < 3.4); if (dHit) { dHit.open = !dHit.open; playDoorSound(dHit.open); showMsg(dHit.open ? "Door opened!" : "Door closed!", 1400); return; } const cHit = cars.find(c => c.hp > 0 && Math.hypot(px - c.x, pz - c.z) < 4.5); if (cHit) { inCar = cHit; setAimState(false); playCarStart(); showMsg(cHit.isTank ? "DRIVING HEAVY BATTLE TANK! Fire = TANK CANNON, F/B = Exit!" : "DRIVING SPORTS CAR! Outrun the zombie horde!", 3600); return; } const pHit = pickups.find(p => !p.done && Math.hypot(px - p.x, pz - p.z) < 3.4); if (pHit) { pHit.done = true; if (pHit.type === "token") { tgBoss = { x: pHit.x + 12, z: pHit.z }; tgTimer = 50; tgTick = 0; playZombieScream(); showMsg("TG: Give me that pirate token! My name is TG!", 4500); speakVoice("Give me that pirate token! My name is T G!", 0.65); } else if (pHit.type === "shield") { shield = Math.min(100, shield + 50); points += 150; playTone(980, 0.22, "sine", 0.15); showMsg("SHIELD POWER-UP! +50 SHIELD!", 2500); setTimeout(function() { pHit.done = false; }, 12000); } else if (pHit.type === "boost") { powerBoost = 600; points += 200; playTone(1180, 0.25, "triangle", 0.16); showMsg("COLOSSEUM RAGE BOOST! 2X DAMAGE & SPEED FOR 10s!", 2800); setTimeout(function() { pHit.done = false; }, 15000); } else { shield = Math.min(100, shield + 50); hp = Math.min(100, hp + 35); points += 300; equipGun(2 + Math.floor(Math.random() * 3)); reserve += 180; showMsg("LOOT CHEST: +50 Shield, +35 HP & " + gunName + "!", 3200); } } }
+function useAny() { if (inCar) { px = inCar.x + 3.2; pz = inCar.z; inCar = null; py = floorH + 1.75; showMsg("Exited vehicle!", 1800); return; } const dHit = doors.find(d => Math.hypot(px - (d.x + 1.2), pz - d.z) < 3.4); if (dHit) { dHit.open = !dHit.open; playDoorSound(dHit.open); showMsg(dHit.open ? "Door opened!" : "Door closed!", 1400); return; } const cHit = cars.find(c => c.hp > 0 && Math.hypot(px - c.x, pz - c.z) < 4.5); if (cHit) { inCar = cHit; setAimState(false); playCarStart(); showMsg(cHit.isTank ? "DRIVING HEAVY BATTLE TANK! Fire = TANK CANNON, F/B = Exit!" : "DRIVING SPORTS CAR! Outrun the zombie horde!", 3600); return; } const pHit = pickups.find(p => !p.done && Math.hypot(px - p.x, pz - p.z) < 3.4); if (pHit) { pHit.done = true; if (pHit.type === "token") { tgBoss = { x: pHit.x + 12, z: pHit.z }; tgTimer = 50; tgTick = 0; playZombieScream(); showMsg("TG: Give me that pirate token! My name is TG!", 4500); } else if (pHit.type === "shield") { shield = Math.min(100, shield + 50); points += 150; playTone(980, 0.22, "sine", 0.15); showMsg("SHIELD POWER-UP! +50 SHIELD!", 2500); setTimeout(function() { pHit.done = false; }, 12000); } else if (pHit.type === "boost") { powerBoost = 600; points += 200; playTone(1180, 0.25, "triangle", 0.16); showMsg("COLOSSEUM RAGE BOOST! 2X DAMAGE & SPEED FOR 10s!", 2800); setTimeout(function() { pHit.done = false; }, 15000); } else { shield = Math.min(100, shield + 50); hp = Math.min(100, hp + 35); points += 300; equipGun(2 + Math.floor(Math.random() * 3)); reserve += 180; showMsg("LOOT CHEST: +50 Shield, +35 HP & " + gunName + "!", 3200); } } }
 let lastFire = 0, draggingLook = false, lastMX = 0, lastMY = 0;
 function shootAny() { if (!started || storyActive || glidingActive || hp <= 0 || pvpLost) return; if (inCar && inCar.isTank) { if (Date.now() - lastFire < (turboMod ? 320 : 650)) return; lastFire = Date.now(); playTankShot(); const tA = inCar.turretRot || yaw, dx = Math.sin(tA), dz = -Math.cos(tA), sh = { x: inCar.x + dx * 4.4, y: 2.0, z: inCar.z + dz * 4.4, vx: dx * 1.45, vy: 0, vz: dz * 1.45, life: 95, dmg: 1200, isShell: true }; bullets.push(sh); sendRoomPacket({ t: "shoot", id: myNetId, x: sh.x, y: sh.y, z: sh.z, vx: sh.vx, vy: 0, vz: sh.vz, dmg: 1200, isShell: true, gun: "TANK" }); return; } if (reloading) return; const baseCd = (gunName === "MINIGUN") ? 65 : (gunName === "COMBAT SHOTGUN") ? 360 : (godMod ? 70 : 140), cd = turboMod ? Math.floor(baseCd * 0.48) : baseCd; if (Date.now() - lastFire < cd) return; if (clip <= 0) { reloadAny(); return; } lastFire = Date.now(); if (!godMod) clip--; playGunSound(gunName); const mult = (godMod ? 12 : 1) * (powerBoost > 0 ? 2 : 1), dx = Math.sin(yaw) * Math.cos(pitch), dy = Math.sin(pitch), dz = -Math.cos(yaw) * Math.cos(pitch), bl = { x: px + dx * 0.9, y: py + dy * 0.9, z: pz + dz * 0.9, vx: dx * 1.65, vy: dy * 1.65, vz: dz * 1.65, life: 85, dmg: dmg * mult, isLaser: cyberMod }; bullets.push(bl); sendRoomPacket({ t: "shoot", id: myNetId, x: bl.x, y: bl.y, z: bl.z, vx: bl.vx, vy: bl.vy, vz: bl.vz, dmg: bl.dmg, isShell: false, isLaser: cyberMod, gun: gunName }); }
 window.addEventListener("keydown", function(e) { const k = e.key.toLowerCase(); Reflect.set(keys, k, true); if (e.code === "Space") { e.preventDefault(); if (storyActive) endStoryCutscene(); else if (pvpLost) startGame("pvp"); else jump3D(); } if (k === "q" && started) toggleAim(); if (k === "g" && started) triggerVortex(); if ((k === "v" || k === "m") && started) toggleViewMode(); if (k === "r") reloadAny(); if (k === "f" || k === "e") useAny(); if (k === "1") equipGun(1); if (k === "2") equipGun(2); if (k === "3") equipGun(3); if (k === "4") equipGun(4); if (k === "5") triggerEmote(1 + Math.floor(Math.random() * 250)); if (k === "6") triggerEmote(251 + Math.floor(Math.random() * 250)); if (k === "7") triggerEmote(501 + Math.floor(Math.random() * 250)); if (k === "8") triggerEmote(751 + Math.floor(Math.random() * 250)); });
 window.addEventListener("keyup", function(e) { Reflect.set(keys, e.key.toLowerCase(), false); });
-window.addEventListener("mousedown", function(e) { if (!started || storyActive) return; if (e.button === 2) { setAimState(true); return; } draggingLook = true; lastMX = e.clientX; lastMY = e.clientY; if (viewMode > 0 && document.pointerLockElement !== glCv && glCv.requestPointerLock) { try { glCv.requestPointerLock(); } catch (err) {} } shootAny(); });
+window.addEventListener("mousedown", function(e) { if (!started || storyActive) return; if (e.button === 2) { setAimState(true); return; } draggingLook = true; lastMX = e.clientX; lastMY = e.clientY; if (document.pointerLockElement !== glCv && glCv.requestPointerLock) { try { glCv.requestPointerLock(); } catch (err) {} } shootAny(); });
 window.addEventListener("mouseup", function(e) { if (e.button === 2) { setAimState(false); return; } draggingLook = false; });
-window.addEventListener("mousemove", function(e) { if (!started || storyActive) return; const sens = aiming ? 0.55 : 1.0; if (viewMode === 0) { yaw = Math.atan2(e.clientX - c2d.width / 2, -(e.clientY - c2d.height / 2)); return; } if (document.pointerLockElement === glCv) { yaw += (e.movementX || 0) * 0.0028 * sens; pitch -= (e.movementY || 0) * 0.0028 * sens; } else if (draggingLook) { yaw += (e.clientX - lastMX) * 0.005 * sens; pitch -= (e.clientY - lastMY) * 0.005 * sens; lastMX = e.clientX; lastMY = e.clientY; } pitch = Math.max(-1.35, Math.min(1.35, pitch)); });
+window.addEventListener("mousemove", function(e) { if (!started || storyActive) return; const sens = aiming ? 0.55 : 1.0; if (document.pointerLockElement === glCv) { yaw += (e.movementX || 0) * 0.0028 * sens; pitch -= (e.movementY || 0) * 0.0028 * sens; } else if (draggingLook) { yaw += (e.clientX - lastMX) * 0.005 * sens; pitch -= (e.clientY - lastMY) * 0.005 * sens; lastMX = e.clientX; lastMY = e.clientY; } pitch = Math.max(-1.35, Math.min(1.35, pitch)); });
 let tMoveId = null, tLookId = null, tMoveSX = 0, tMoveSY = 0, tDX = 0, tDY = 0, tLookLX = 0, tLookLY = 0;
 window.addEventListener("touchstart", function(e) { if (!started) return; Array.from(e.changedTouches).forEach(t => { if (t.clientX < window.innerWidth * 0.48 && tMoveId === null) { tMoveId = t.identifier; tMoveSX = t.clientX; tMoveSY = t.clientY; } else if (tLookId === null) { tLookId = t.identifier; tLookLX = t.clientX; tLookLY = t.clientY; } }); }, { passive: true });
 window.addEventListener("touchmove", function(e) { if (!started) return; const sens = aiming ? 0.55 : 1.0; Array.from(e.changedTouches).forEach(t => { if (t.identifier === tMoveId) { tDX = Math.max(-1, Math.min(1, (t.clientX - tMoveSX) / 45)); tDY = Math.max(-1, Math.min(1, (t.clientY - tMoveSY) / 45)); } else if (t.identifier === tLookId) { yaw += (t.clientX - tLookLX) * 0.006 * sens; pitch = Math.max(-1.35, Math.min(1.35, pitch - (t.clientY - tLookLY) * 0.006 * sens)); tLookLX = t.clientX; tLookLY = t.clientY; } }); }, { passive: true });
@@ -446,61 +503,63 @@ function mainLoop() {
   if (storyActive) { py = 46.0; vy = 0; }
   else if (glidingActive) { const gSpd = 0.28, vx = (Math.sin(yaw) * Math.max(0.35, fwd) + Math.cos(yaw) * str) * gSpd, vz = (-Math.cos(yaw) * Math.max(0.35, fwd) + Math.sin(yaw) * str) * gSpd; px += vx; pz += vz; py -= 0.16; if (py <= 1.75) { py = 1.75; vy = 0; onGround = true; glidingActive = false; playTone(440, 0.2, "triangle", 0.14); showMsg("TOUCHDOWN! Press (F / XBOX B) near your Sports Car or Squad Tank!", 3800); } }
   else if (inCar) { const turnDir = (fwd < -0.05) ? -1 : 1; if (Math.abs(steer) > 0.05) inCar.rot += Math.max(-1, Math.min(1, steer)) * (inCar.isTank ? 0.032 : 0.048) * turnDir; const tMult = turboMod ? 1.55 : 1.0, cSpd = fwd * (inCar.isTank ? 0.24 : 0.36) * tMult, nx = inCar.x + Math.sin(inCar.rot) * cSpd, nz = inCar.z - Math.cos(inCar.rot) * cSpd; if (!hitsAny(nx, inCar.z)) inCar.x = nx; if (!hitsAny(inCar.x, nz)) inCar.z = nz; px = inCar.x; pz = inCar.z; py = inCar.isTank ? 2.6 : 2.1; if (inCar.isTank) inCar.turretRot = yaw; else yaw = inCar.rot; enemies = enemies.filter(e => { if (Math.abs(cSpd) > 0.06 && Math.hypot(inCar.x - e.x, inCar.z - e.z) < (inCar.isTank ? 3.5 : 2.6)) { playCarCrash(); points += 150; updateQuestHud(); return false; } return true; }); }
-  else { const spd = (godMod || turboMod || powerBoost > 0) ? 0.27 : (aiming ? 0.10 : 0.16), vx = (viewMode > 0) ? (Math.sin(yaw) * fwd + Math.cos(yaw) * str) * spd : str * spd, vz = (viewMode > 0) ? (-Math.cos(yaw) * fwd + Math.sin(yaw) * str) * spd : -fwd * spd; if (!hitsAny(px + vx, pz)) px += vx; if (!hitsAny(px, pz + vz)) pz += vz; floorH = 0; stairs.forEach(st => { if (Math.abs(px - st.x) < 1.5 && pz <= st.z1 && pz >= st.z2) floorH = ((st.z1 - pz) / (st.z1 - st.z2)) * 4.0; }); buildings.forEach(b => { if (Math.abs(px - b.x) < 5.8 && Math.abs(pz - b.z) < 5.8 && py > 4.2) floorH = Math.max(floorH, 4.0); }); py += vy; vy -= 0.012; if (py <= floorH + 1.75) { py = floorH + 1.75; vy = 0; onGround = true; } }
-  if (gameMode !== "pvp" && portal && !portal.open && !tankBoss && enemiesLeft <= 0 && enemies.length === 0) { portal.open = true; updateQuestHud(); showMsg("HORDE CLEARED! WALK INTO THE GLOWING GREEN BIO-BOTTLE PORTAL!", 4000); speakVoice("Horde cleared! Walk into the glowing green bio bottle portal!", 0.95); }
+  else { const spd = (godMod || turboMod || powerBoost > 0) ? 0.27 : (aiming ? 0.10 : 0.16), vx = (Math.sin(yaw) * fwd + Math.cos(yaw) * str) * spd, vz = (-Math.cos(yaw) * fwd + Math.sin(yaw) * str) * spd; if (!hitsAny(px + vx, pz)) px += vx; if (!hitsAny(px, pz + vz)) pz += vz; floorH = 0; stairs.forEach(st => { if (Math.abs(px - st.x) < 1.5 && pz <= st.z1 && pz >= st.z2) floorH = ((st.z1 - pz) / (st.z1 - st.z2)) * 4.0; }); buildings.forEach(b => { if (Math.abs(px - b.x) < 5.8 && Math.abs(pz - b.z) < 5.8 && py > 4.2) floorH = Math.max(floorH, 4.0); }); py += vy; vy -= 0.012; if (py <= floorH + 1.75) { py = floorH + 1.75; vy = 0; onGround = true; } }
+  if (gameMode !== "pvp" && portal && !portal.open && !tankBoss && enemiesLeft <= 0 && enemies.length === 0) { portal.open = true; updateQuestHud(); showMsg("HORDE CLEARED! WALK INTO THE GLOWING GREEN BIO-BOTTLE PORTAL!", 4000); }
   if (gameMode !== "pvp" && portal && portal.open && !glidingActive && Math.hypot(px - portal.x, pz - portal.z) < 3.0) { chaptersCleared++; level++; hp = Math.min(100, hp + 40); points += 500; playTone(1250, 0.35, "sine", 0.16); savePlayerData(); buildLevel(level); playStoryCutscene(); return; }
   if (!glidingActive && pickups.some(p => !p.done && Math.hypot(px - p.x, pz - p.z) < 2.2)) useAny();
   if (vortexOrb) { vortexOrb.life--; enemies.forEach(e => { const d = Math.hypot(vortexOrb.x - e.x, vortexOrb.z - e.z); if (d < 14 && d > 0.6) { e.x += ((vortexOrb.x - e.x) / d) * 0.25; e.z += ((vortexOrb.z - e.z) / d) * 0.25; } }); if (vortexOrb.life <= 0) { explodeAt(vortexOrb.x, vortexOrb.z, 10, false); vortexOrb = null; } }
-  bullets = bullets.filter(b => { b.x += b.vx; b.y += b.vy; b.z += b.vz; b.life--; if (b.life <= 0) return false; if (b.isLaser && hitsAny(b.x, b.z)) { b.vx = -b.vx; b.vz = -b.vz; b.isLaser = false; return true; } if (gameMode === "pvp" && !b.fromNet && roomCode) { let pHitId = null; Object.keys(remotePlayers).forEach(pid => { const rp = Reflect.get(remotePlayers, pid); if (rp && Math.hypot(b.x - rp.x, b.z - rp.z) < 1.25) pHitId = pid; }); if (pHitId) { sendRoomPacket({ t: "phit", id: myNetId, fromId: myNetId, from: myName, target: pHitId, dmg: b.dmg }); if (vampMod) { hp = Math.min(100, hp + 8); shield = Math.min(100, shield + 6); } playTone(920, 0.09, "triangle", 0.14); return false; } } if (tankBoss && Math.hypot(b.x - tankBoss.x, b.z - tankBoss.z) < 2.8) { tankBoss.hp -= b.dmg; points += 35; if (b.isShell) explodeAt(b.x, b.z, 7.5, false); document.getElementById("tankHud").innerText = "ENEMY TANK BOSS: " + Math.max(0, tankBoss.hp) + " / " + tankBoss.maxHp + " HP"; if (tankBoss.hp <= 0) { explodeAt(tankBoss.x, tankBoss.z, 10, false); cars.push({ x: tankBoss.x, z: tankBoss.z, rot: tankBoss.rot, turretRot: tankBoss.turretRot, hp: 5000, col: new Array(0.15, 0.55, 0.25), hex: "#00e676", isTank: true }); tankBoss = null; points += 5000; document.getElementById("tankHud").style.display = "none"; updateQuestHud(); showMsg("BOSS TANK CAPTURED! Walk up & press (F / XBOX B) to drive it!", 4500); speakVoice("Enemy tank captured! Press F to drive it!", 0.95); } return false; } if (tgBoss && Math.hypot(b.x - tgBoss.x, b.z - tgBoss.z) < 1.4) { tgBoss.x += b.vx * 1.4; tgBoss.z += b.vz * 1.4; points += 25; return false; } let hit = false; enemies = enemies.filter(e => { if (!hit && Math.hypot(b.x - e.x, b.z - e.z) < (e.isTitan ? 2.4 : e.isBoss ? 1.6 : 0.95)) { e.hp -= b.dmg; if (cyberMod) e.freeze = 150; if (vampMod) { hp = Math.min(100, hp + 6); shield = Math.min(100, shield + 4); } if (stormMod) { let arcs = 0; enemies.forEach(e2 => { if (e2 !== e && arcs < 3 && Math.hypot(e2.x - e.x, e2.z - e.z) < 8.5) { e2.hp -= Math.floor(b.dmg * 0.65); arcs++; } }); playTone(1350, 0.08, "sawtooth", 0.12); } if (!b.fromNet && roomCode && !isHost) sendRoomPacket({ t: "zhit", id: myNetId, x: e.x, z: e.z, dmg: b.dmg }); points += 15; hit = true; if (b.isShell) explodeAt(b.x, b.z, 7.5, false); if (e.hp <= 0) { if (e.zType === "gold") { points += 1500; shield = Math.min(100, shield + 50); playTone(1400, 0.3, "sine", 0.16); showMsg("GOLD ZOMBIE DEFEATED! +1,500 PTS & +50 SHIELD!", 3200); } else if (e.zType === "boomer") { explodeAt(e.x, e.z, 6.5, true); showMsg("EXPLODING ZOMBIE DETONATED!", 2200); } else { (e.zType === "robot") ? playRobotWhir() : playZombieScream(); points += e.isBoss ? 600 : 100; } updateQuestHud(); return false; } } return true; }); return !hit; });
+  bullets = bullets.filter(b => { b.x += b.vx; b.y += b.vy; b.z += b.vz; b.life--; if (b.life <= 0) return false; if (b.isLaser && hitsAny(b.x, b.z)) { b.vx = -b.vx; b.vz = -b.vz; b.isLaser = false; return true; } if (gameMode === "pvp" && !b.fromNet && roomCode) { let pHitId = null; Object.keys(remotePlayers).forEach(pid => { const rp = Reflect.get(remotePlayers, pid); if (rp && Math.hypot(b.x - rp.x, b.z - rp.z) < 1.25) pHitId = pid; }); if (pHitId) { sendRoomPacket({ t: "phit", id: myNetId, fromId: myNetId, from: myName, target: pHitId, dmg: b.dmg }); if (vampMod) { hp = Math.min(100, hp + 8); shield = Math.min(100, shield + 6); } playTone(920, 0.09, "triangle", 0.14); return false; } } if (tankBoss && Math.hypot(b.x - tankBoss.x, b.z - tankBoss.z) < 2.8) { tankBoss.hp -= b.dmg; points += 35; if (b.isShell) explodeAt(b.x, b.z, 7.5, false); document.getElementById("tankHud").innerText = "ENEMY TANK BOSS: " + Math.max(0, tankBoss.hp) + " / " + tankBoss.maxHp + " HP"; if (tankBoss.hp <= 0) { explodeAt(tankBoss.x, tankBoss.z, 10, false); cars.push({ x: tankBoss.x, z: tankBoss.z, rot: tankBoss.rot, turretRot: tankBoss.turretRot, hp: 5000, hexNum: 0x00e676, hex: "#00e676", isTank: true }); tankBoss = null; points += 5000; document.getElementById("tankHud").style.display = "none"; updateQuestHud(); showMsg("BOSS TANK CAPTURED! Walk up & press (F / XBOX B) to drive it!", 4500); } return false; } if (tgBoss && Math.hypot(b.x - tgBoss.x, b.z - tgBoss.z) < 1.4) { tgBoss.x += b.vx * 1.4; tgBoss.z += b.vz * 1.4; points += 25; return false; } let hit = false; enemies = enemies.filter(e => { if (!hit && Math.hypot(b.x - e.x, b.z - e.z) < (e.isTitan ? 2.4 : e.isBoss ? 1.6 : 0.95)) { e.hp -= b.dmg; if (cyberMod) e.freeze = 150; if (vampMod) { hp = Math.min(100, hp + 6); shield = Math.min(100, shield + 4); } if (stormMod) { let arcs = 0; enemies.forEach(e2 => { if (e2 !== e && arcs < 3 && Math.hypot(e2.x - e.x, e2.z - e.z) < 8.5) { e2.hp -= Math.floor(b.dmg * 0.65); arcs++; } }); playTone(1350, 0.08, "sawtooth", 0.12); } if (!b.fromNet && roomCode && !isHost) sendRoomPacket({ t: "zhit", id: myNetId, x: e.x, z: e.z, dmg: b.dmg }); points += 15; hit = true; if (b.isShell) explodeAt(b.x, b.z, 7.5, false); if (e.hp <= 0) { if (e.zType === "gold") { points += 1500; shield = Math.min(100, shield + 50); playTone(1400, 0.3, "sine", 0.16); showMsg("GOLD ZOMBIE DEFEATED! +1,500 PTS & +50 SHIELD!", 3200); } else if (e.zType === "boomer") { explodeAt(e.x, e.z, 6.5, true); showMsg("EXPLODING ZOMBIE DETONATED!", 2200); } else { (e.zType === "robot") ? playRobotWhir() : playZombieScream(); points += e.isBoss ? 600 : 100; } updateQuestHud(); return false; } } return true; }); return !hit; });
   if (tankBoss && !storyActive && !glidingActive) { const dx = px - tankBoss.x, dz = pz - tankBoss.z, dist = Math.hypot(dx, dz), targetA = Math.atan2(dx, -dz); tankBoss.turretRot = targetA; tankBoss.rot += Math.sin(targetA - tankBoss.rot) * 0.025; if (dist > 11) { tankBoss.x += Math.sin(tankBoss.rot) * 0.045; tankBoss.z -= Math.cos(tankBoss.rot) * 0.045; } else if (dist < 3.6) damagePlayer(0.8); tankBoss.fireCd--; if (tankBoss.fireCd <= 0) { tankBoss.fireCd = 135; playTankShot(); tankShells.push({ x: tankBoss.x + Math.sin(targetA) * 4.5, y: 2.0, z: tankBoss.z - Math.cos(targetA) * 4.5, vx: Math.sin(targetA) * 0.72, vz: -Math.cos(targetA) * 0.72, life: 95 }); } }
   tankShells = tankShells.filter(sh => { sh.x += sh.vx; sh.z += sh.vz; sh.life--; if (sh.life <= 0 || Math.hypot(sh.x - px, sh.z - pz) < 2.2) { explodeAt(sh.x, sh.z, 5.5, true); return false; } return true; });
   enemies = enemies.filter(e => { if (e.freeze > 0) e.freeze--; const dx = px - e.x, dz = pz - e.z, dist = Math.hypot(dx, dz), ang = Math.atan2(dx, dz), mSpd = (e.freeze > 0) ? e.spd * 0.3 : e.spd; if (dist > 1.35) { const ex = e.x + Math.sin(ang) * mSpd, ez = e.z + Math.cos(ang) * mSpd; if (!hitsAny(ex, e.z)) e.x = ex; if (!hitsAny(e.x, ez)) e.z = ez; return true; } if (e.zType === "boomer") { explodeAt(e.x, e.z, 6.5, true); return false; } damagePlayer(e.zType === "acid" ? 0.7 : 0.45); return true; });
-  if (tgBoss) { tgTick++; if (tgTick >= 60) { tgTick = 0; tgTimer--; if (tgTimer <= 0) { tgBoss = null; points += 2500; shield = 100; showMsg("VICTORY! Survived TG for 50s! +2,500 PTS!", 4000); speakVoice("Victory! You survived T G!", 0.95); } } if (tgBoss) { const dx = px - tgBoss.x, dz = pz - tgBoss.z, ang = Math.atan2(dx, dz); tgBoss.x += Math.sin(ang) * 0.11; tgBoss.z += Math.cos(ang) * 0.11; if (Math.hypot(dx, dz) < 1.8) damagePlayer(0.95); } }
-  const targetFov = aiming ? 0.62 : 1.18; curFov += (targetFov - curFov) * 0.22;
+  if (tgBoss) { tgTick++; if (tgTick >= 60) { tgTick = 0; tgTimer--; if (tgTimer <= 0) { tgBoss = null; points += 2500; shield = 100; showMsg("VICTORY! Survived TG for 50s! +2,500 PTS!", 4000); } } if (tgBoss) { const dx = px - tgBoss.x, dz = pz - tgBoss.z, ang = Math.atan2(dx, dz); tgBoss.x += Math.sin(ang) * 0.11; tgBoss.z += Math.cos(ang) * 0.11; if (Math.hypot(dx, dz) < 1.8) damagePlayer(0.95); } }
+  const targetFov = aiming ? 36 : 68; curFov += (targetFov - curFov) * 0.22;
   tagCtx.clearRect(0, 0, tagCv.width, tagCv.height);
-  if ((viewMode > 0 || storyActive || glidingActive) && gl) {
-    const isDark = (horrorMod || difficulty === "insanity") && !mapTheme.isColosseum, fogC = isDark ? new Array(0.02, 0.01, 0.03) : mapTheme.fog;
-    const camX = storyActive ? px + Math.sin(yaw) * 3.4 : (viewMode === 2 || glidingActive) ? px - Math.sin(yaw) * 4.6 : px;
-    const camY = storyActive ? py + 0.55 : (viewMode === 2 || glidingActive) ? py + 1.3 : py;
-    const camZ = storyActive ? pz - Math.cos(yaw) * 3.4 : (viewMode === 2 || glidingActive) ? pz + Math.cos(yaw) * 4.6 : pz;
-    const camYaw = storyActive ? (yaw + Math.PI) : yaw;
-    gl.clearColor(fogC.at(0), fogC.at(1), fogC.at(2), 1.0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.uniformMatrix4fv(uProj, false, matPersp(curFov, glCv.width / glCv.height, 0.1, 350)); gl.uniformMatrix4fv(uView, false, matView(camX, camY, camZ, camYaw, storyActive ? -0.05 : pitch));
-    gl.uniform3fv(uCam, new Array(camX, camY, camZ)); gl.uniform3fv(uFog, fogC); gl.uniform1f(uFogDens, mapTheme.isColosseum ? 0.004 : (isDark ? 0.028 : 0.014));
-    drawCube(px, -0.25, pz, 500, 0.5, 500, 0, isDark ? new Array(0.04, 0.09, 0.05) : mapTheme.ground);
-    if (mapTheme.sunPos) drawCyl(px + mapTheme.sunPos.at(0), mapTheme.sunPos.at(1), pz + mapTheme.sunPos.at(2), 8.5, 8.5, 8.5, 0.4, new Array(1.0, 0.92, 0.35));
-    walls.forEach(w => { const wh = w.h || 7.6; drawCube((w.x1 + w.x2) / 2, wh / 2, (w.z1 + w.z2) / 2, Math.max(1.4, Math.abs(w.x2 - w.x1)), wh, Math.max(1.4, Math.abs(w.z2 - w.z1)), 0, mapTheme.wall); });
-    buildings.forEach(b => { drawCube(b.x, 4.0, b.z, 11.4, 0.25, 11.4, 0, new Array(0.28, 0.17, 0.1)); drawCube(b.x, 7.9, b.z, 12.6, 0.8, 12.6, 0, b.roof); });
-    doors.forEach(d => drawCube(d.x + Math.cos(d.ang) * 1.2, 1.8, d.z + Math.sin(d.ang) * 1.2, 2.4, 3.6, 0.22, -d.ang, new Array(0.55, 0.32, 0.14)));
-    stairs.forEach(st => Array.from({ length: 8 }, (_, k) => drawCube(st.x, 0.25 + k * 0.5, st.z1 - k * ((st.z1 - st.z2) / 8), 2.4, 0.5, 1.0, 0, new Array(0.46, 0.28, 0.15))));
-    props.forEach(pr => drawCube(pr.x, pr.y, pr.z, pr.sx, pr.sy, pr.sz, 0, pr.col));
-    trees.forEach(t => { drawCyl(t.x, 2.25, t.z, 0.9, 4.5, 0.9, 0, new Array(0.36, 0.22, 0.13)); drawWedge(t.x, 5.6, t.z, 4.8, 3.4, 4.8, 0.4, new Array(0.08, 0.28, 0.13)); });
-    cars.forEach(car => { if (car.hp > 0) drawCarGL(car); });
-    if (portal && gameMode !== "pvp") drawGreenBottlePortal(portal.x, portal.z, portal.open);
-    if (vortexOrb) drawCyl(vortexOrb.x, 2.0, vortexOrb.z, 2.8, 2.8, 2.8, Date.now() * 0.015, new Array(0.65, 0.1, 1.0));
-    pickups.forEach(p => { if (!p.done) { const pc = p.type === "shield" ? new Array(0, 0.85, 1) : (p.type === "boost" || p.type === "token") ? new Array(1, 0.84, 0) : new Array(1, 0.56, 0); drawCube(p.x, 0.85, p.z, 1.0, 0.85, 1.0, Date.now() * 0.003, pc); } });
-    if (storyActive || glidingActive) drawBattleBusGL(px - 8.5, 48.0, pz - 8.0);
-    if (glidingActive) drawGliderGL(px, py + 1.0, pz, mySkinId);
-    if ((viewMode === 2 || storyActive || glidingActive) && !inCar) { const showEmote = storyActive ? (1 + (Math.floor(Date.now() / 1400) % 4)) : myEmote; drawRiggedGL(px, pz, "mate", 1.0, 0, Math.max(0, py - 1.75), storyActive ? -yaw : (Math.PI - yaw), mySkinId, showEmote); const sp = project3DToScreen(px, py + 1.45, pz, camX, camY, camZ); if (sp) { tagCtx.fillStyle = "#00ff88"; tagCtx.font = "bold 13px Courier New"; tagCtx.textAlign = "center"; tagCtx.fillText(myName + " (SKIN #" + mySkinId + ")", sp.x, sp.y); } }
-    Object.values(remotePlayers).forEach(rp => { if (rp.carIdx >= 0 && cars.at(rp.carIdx)) { const vc = cars.at(rp.carIdx); vc.x = rp.x; vc.z = rp.z; vc.rot = rp.carRot || 0; vc.turretRot = rp.yaw || 0; drawCarGL(vc); } else { drawRiggedGL(rp.x, rp.z, "mate", 1.0, 0, Math.max(0, rp.y - 1.75), Math.PI - rp.yaw, rp.skin, rp.emote); } const sp = project3DToScreen(rp.x, rp.y + (rp.carIdx >= 0 ? 2.2 : 1.45), rp.z, camX, camY, camZ); if (sp) { tagCtx.fillStyle = "#00e5ff"; tagCtx.font = "bold 14px Courier New"; tagCtx.textAlign = "center"; tagCtx.fillText((rp.name || "ALLY") + (rp.carIdx >= 0 ? " (DRIVING)" : ""), sp.x, sp.y); } });
-    enemies.forEach(e => drawRiggedGL(e.x, e.z, e.zType, e.isTitan ? 2.7 : e.isBoss ? 1.8 : 1.0, e.phase));
-    if (tankBoss) drawTankGL(tankBoss); if (tgBoss) drawRiggedGL(tgBoss.x, tgBoss.z, "tg", 1.35, 0);
-    bullets.forEach(b => drawCube(b.x, b.y, b.z, b.isShell ? 0.58 : 0.22, b.isShell ? 0.58 : 0.22, b.isShell ? 0.58 : 0.22, 0, b.isShell ? new Array(1, 0.35, 0.05) : b.isLaser ? new Array(0, 0.9, 1) : new Array(1, 0.85, 0.1)));
-    tankShells.forEach(sh => drawCube(sh.x, sh.y, sh.z, 0.58, 0.58, 0.58, 0, new Array(1, 0.25, 0)));
-    drawFirstPersonGun();
-  } else {
-    const sc = 14, cx = c2d.width / 2, cy = c2d.height / 2; ctx2.fillStyle = mapTheme.isColosseum ? "#5c4a2e" : (horrorMod ? "#07120a" : "#132217"); ctx2.fillRect(0, 0, c2d.width, c2d.height);
-    buildings.forEach(b => { ctx2.fillStyle = "#3e2723"; ctx2.fillRect(cx + (b.x - 6 - px) * sc, cy + (b.z - 6 - pz) * sc, 12 * sc, 12 * sc); });
-    doors.forEach(d => { ctx2.fillStyle = d.open ? "#00e5ff" : "#8d6e63"; ctx2.fillRect(cx + (d.x - px) * sc, cy + (d.z - pz) * sc, 2.4 * sc, 6); });
-    trees.forEach(t => { ctx2.fillStyle = "#164a22"; ctx2.beginPath(); ctx2.arc(cx + (t.x - px) * sc, cy + (t.z - pz) * sc, 18, 0, Math.PI * 2); ctx2.fill(); });
-    if (portal && gameMode !== "pvp") { ctx2.fillStyle = portal.open ? "#00ff44" : "#1b5e20"; ctx2.beginPath(); ctx2.arc(cx + (portal.x - px) * sc, cy + (portal.z - pz) * sc, 14, 0, Math.PI * 2); ctx2.fill(); }
-    cars.forEach(car => { if (car.hp > 0) { ctx2.save(); ctx2.translate(cx + (car.x - px) * sc, cy + (car.z - pz) * sc); ctx2.rotate(car.rot); ctx2.fillStyle = car.hex; ctx2.fillRect(car.isTank ? -24 : -15, car.isTank ? -38 : -28, car.isTank ? 48 : 30, car.isTank ? 76 : 56); ctx2.restore(); } });
-    if (tankBoss) { ctx2.save(); ctx2.translate(cx + (tankBoss.x - px) * sc, cy + (tankBoss.z - pz) * sc); ctx2.rotate(tankBoss.rot); ctx2.fillStyle = "#33691e"; ctx2.fillRect(-26, -42, 52, 84); ctx2.restore(); }
-    Object.values(remotePlayers).forEach(rp => { const rx = cx + (rp.x - px) * sc, rz = cy + (rp.z - pz) * sc; ctx2.fillStyle = "#00e5ff"; ctx2.beginPath(); ctx2.arc(rx, rz, 11, 0, Math.PI * 2); ctx2.fill(); ctx2.fillStyle = "#fff"; ctx2.font = "bold 11px Courier New"; ctx2.textAlign = "center"; ctx2.fillText((rp.name || "ALLY") + (rp.carIdx >= 0 ? " (DRIVING)" : ""), rx, rz - 15); });
-    enemies.forEach(e => { const cMap = { gold: "#ffd700", boomer: "#ff5722", acid: "#76ff03", shadow: "#7c4dff", robot: "#00e5ff", zombie: "#ff1744" }; ctx2.fillStyle = Reflect.get(cMap, e.zType) || "#ff1744"; ctx2.beginPath(); ctx2.arc(cx + (e.x - px) * sc, cy + (e.z - pz) * sc, e.isTitan ? 24 : e.isBoss ? 18 : 10, 0, Math.PI * 2); ctx2.fill(); });
-    ctx2.save(); ctx2.translate(cx, cy); ctx2.rotate(yaw - Math.PI / 2); ctx2.fillStyle = "#37474f"; ctx2.fillRect(4, 3, 18, 5); ctx2.fillStyle = godMod ? "#ffd700" : "#1565c0"; ctx2.beginPath(); ctx2.arc(0, 0, 11, 0, Math.PI * 2); ctx2.fill(); ctx2.restore();
-    ctx2.fillStyle = "#00ff88"; ctx2.font = "bold 11px Courier New"; ctx2.textAlign = "center"; ctx2.fillText(myName, cx, cy - 16);
+  if (renderer && scene && camera) {
+    glCv.style.display = "block"; c2d.style.display = "none";
+    const windT = Date.now() * 0.0022;
+    grassTufts.forEach(gt => { gt.rotation.z = Math.sin(windT + gt.userData.ph) * 0.22; gt.rotation.x = Math.cos(windT * 0.8 + gt.userData.ph) * 0.14; });
+    while (dynGroup.children.length > 0) dynGroup.remove(dynGroup.children.at(0));
+    if (dynGroup.userData.camGun) { camera.remove(dynGroup.userData.camGun); dynGroup.userData.camGun = null; }
+    const is3rd = (viewMode === 2 || viewMode === 0 || storyActive || glidingActive);
+    const camX = storyActive ? px + Math.sin(yaw) * 3.6 : is3rd ? px - Math.sin(yaw) * 4.8 : px;
+    const camY = storyActive ? py + 0.65 : is3rd ? py + 1.45 : py;
+    const camZ = storyActive ? pz - Math.cos(yaw) * 3.6 : is3rd ? pz + Math.cos(yaw) * 4.8 : pz;
+    camera.fov = curFov; camera.updateProjectionMatrix();
+    camera.position.set(camX, camY, camZ);
+    camera.rotation.order = "YXZ";
+    camera.rotation.y = storyActive ? -(yaw + Math.PI) : -yaw;
+    camera.rotation.x = storyActive ? -0.06 : pitch;
+    if (skyMesh) skyMesh.position.set(px, 0, pz);
+    doors.forEach(d => { const dm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.6, 0.22), new THREE.MeshStandardMaterial({ color: 0x6d4c41 })); dm.position.set(d.x + Math.cos(d.ang) * 1.2, 1.8, d.z + Math.sin(d.ang) * 1.2); dm.rotation.y = -d.ang; dynGroup.add(dm); });
+    cars.forEach(car => { if (car.hp > 0) drawCarThree(car); });
+    if (portal && gameMode !== "pvp") { const spin = Date.now() * 0.003, bob = Math.sin(Date.now() * 0.005) * 0.25; const pm = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 2.4, 14), new THREE.MeshBasicMaterial({ color: portal.open ? 0x00ff66 : 0x1b5e20 })); pm.position.set(portal.x, 1.4 + bob, portal.z); pm.rotation.y = spin; dynGroup.add(pm); }
+    if (vortexOrb) { const vm = new THREE.Mesh(new THREE.SphereGeometry(1.6, 14, 14), new THREE.MeshBasicMaterial({ color: 0xaa00ff, wireframe: true })); vm.position.set(vortexOrb.x, 1.8, vortexOrb.z); vm.rotation.y = Date.now() * 0.015; dynGroup.add(vm); }
+    pickups.forEach(p => { if (!p.done) { const pc = p.type === "shield" ? 0x00e5ff : (p.type === "boost" || p.type === "token") ? 0xffd700 : 0xff9100; const pm = new THREE.Mesh(new THREE.OctahedronGeometry(0.65), new THREE.MeshBasicMaterial({ color: pc })); pm.position.set(p.x, 0.95, p.z); pm.rotation.y = Date.now() * 0.003; dynGroup.add(pm); } });
+    if (storyActive || glidingActive) { const bus = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.5, 9.2), new THREE.MeshStandardMaterial({ color: 0x1565c0 })); bus.position.set(px - 8.5, 48.0, pz - 8.0); dynGroup.add(bus); }
+    if (glidingActive) { const glM = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.16, 1.5), new THREE.MeshStandardMaterial({ color: getSkinHex(mySkinId) })); glM.position.set(px, py + 1.45, pz); glM.rotation.y = -yaw; dynGroup.add(glM); }
+    if (is3rd && !inCar) { const showEmote = storyActive ? (1 + (Math.floor(Date.now() / 1400) % 4)) : myEmote; drawActorThree(px, pz, "mate", 1.0, 0, Math.max(0, py - 1.75), storyActive ? -yaw : (Math.PI - yaw), mySkinId, showEmote); const sp = project3DToScreen(px, py + 1.45, pz); if (sp) { tagCtx.fillStyle = "#00ff88"; tagCtx.font = "bold 13px Courier New"; tagCtx.textAlign = "center"; tagCtx.fillText(myName + " (SKIN #" + mySkinId + ")", sp.x, sp.y); } }
+    Object.values(remotePlayers).forEach(rp => { if (rp.carIdx >= 0 && cars.at(rp.carIdx)) { const vc = cars.at(rp.carIdx); vc.x = rp.x; vc.z = rp.z; vc.rot = rp.carRot || 0; vc.turretRot = rp.yaw || 0; drawCarThree(vc); } else { drawActorThree(rp.x, rp.z, "mate", 1.0, 0, Math.max(0, rp.y - 1.75), Math.PI - rp.yaw, rp.skin, rp.emote); } const sp = project3DToScreen(rp.x, rp.y + (rp.carIdx >= 0 ? 2.2 : 1.45), rp.z); if (sp) { tagCtx.fillStyle = "#00e5ff"; tagCtx.font = "bold 14px Courier New"; tagCtx.textAlign = "center"; tagCtx.fillText((rp.name || "ALLY") + (rp.carIdx >= 0 ? " (DRIVING)" : ""), sp.x, sp.y); } });
+    enemies.forEach(e => drawActorThree(e.x, e.z, e.zType, e.isTitan ? 2.6 : e.isBoss ? 1.7 : 1.0, e.phase));
+    if (tankBoss) drawCarThree({ x: tankBoss.x, z: tankBoss.z, rot: tankBoss.rot, turretRot: tankBoss.turretRot, hexNum: 0x4e342e, isTank: true });
+    if (tgBoss) drawActorThree(tgBoss.x, tgBoss.z, "tg", 1.35, 0);
+    bullets.forEach(b => { const bm = new THREE.Mesh(new THREE.SphereGeometry(b.isShell ? 0.34 : 0.14, 6, 6), new THREE.MeshBasicMaterial({ color: b.isShell ? 0xff5722 : b.isLaser ? 0x00e5ff : 0xffd54f })); bm.position.set(b.x, b.y, b.z); dynGroup.add(bm); });
+    tankShells.forEach(sh => { const sm = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff1744 })); sm.position.set(sh.x, sh.y, sh.z); dynGroup.add(sm); });
+    if (!is3rd) drawFirstPersonGunThree();
+    renderer.render(scene, camera);
   }
+  const mmSize = 156, mmPad = 14, mmX = tagCv.width - mmSize - mmPad, mmY = tagCv.height - mmSize - 42, mmCx = mmX + mmSize / 2, mmCy = mmY + mmSize / 2, mmSc = 1.65;
+  tagCtx.save(); tagCtx.beginPath(); tagCtx.rect(mmX, mmY, mmSize, mmSize); tagCtx.clip();
+  tagCtx.fillStyle = mapTheme.isColosseum ? "rgba(62,48,28,0.88)" : "rgba(12,24,16,0.88)"; tagCtx.fillRect(mmX, mmY, mmSize, mmSize);
+  if (!mapTheme.isColosseum) { tagCtx.fillStyle = "#373b42"; tagCtx.fillRect(mmCx + (-7 - px) * mmSc, mmY, 14 * mmSc, mmSize); }
+  buildings.forEach(b => { tagCtx.fillStyle = "#8d6e63"; tagCtx.fillRect(mmCx + (b.x - 6 - px) * mmSc, mmCy + (b.z - 6 - pz) * mmSc, 12 * mmSc, 12 * mmSc); });
+  if (portal && gameMode !== "pvp") { tagCtx.fillStyle = portal.open ? "#00ff66" : "#1b5e20"; tagCtx.beginPath(); tagCtx.arc(mmCx + (portal.x - px) * mmSc, mmCy + (portal.z - pz) * mmSc, 5, 0, Math.PI * 2); tagCtx.fill(); }
+  cars.forEach(car => { if (car.hp > 0) { tagCtx.fillStyle = car.hex; tagCtx.fillRect(mmCx + (car.x - px) * mmSc - 3, mmCy + (car.z - pz) * mmSc - 4, 6, 8); } });
+  Object.values(remotePlayers).forEach(rp => { tagCtx.fillStyle = "#00e5ff"; tagCtx.beginPath(); tagCtx.arc(mmCx + (rp.x - px) * mmSc, mmCy + (rp.z - pz) * mmSc, 4.5, 0, Math.PI * 2); tagCtx.fill(); });
+  enemies.forEach(e => { tagCtx.fillStyle = "#ff1744"; tagCtx.beginPath(); tagCtx.arc(mmCx + (e.x - px) * mmSc, mmCy + (e.z - pz) * mmSc, 3.2, 0, Math.PI * 2); tagCtx.fill(); });
+  tagCtx.save(); tagCtx.translate(mmCx, mmCy); tagCtx.rotate(yaw); tagCtx.fillStyle = "#00ff88"; tagCtx.beginPath(); tagCtx.moveTo(0, -6); tagCtx.lineTo(4.5, 5); tagCtx.lineTo(-4.5, 5); tagCtx.closePath(); tagCtx.fill(); tagCtx.restore();
+  tagCtx.restore(); tagCtx.strokeStyle = "#00e5ff"; tagCtx.lineWidth = 2; tagCtx.strokeRect(mmX, mmY, mmSize, mmSize);
+  tagCtx.fillStyle = "#00e5ff"; tagCtx.font = "bold 10px Courier New"; tagCtx.textAlign = "left"; tagCtx.fillText("2D RADAR MINIMAP", mmX + 6, mmY + 12);
   document.getElementById("topLeft").innerText = "HP: " + Math.ceil(hp) + "% | SHIELD: " + Math.ceil(shield) + "%" + (gameMode === "pvp" ? (pvpSecondChance ? " | 2ND CHANCE: READY" : " | LAST LIFE") : "") + (inCar ? (inCar.isTank ? " | TANK HP: " : " | CAR HP: ") + Math.ceil(inCar.hp) : "");
   document.getElementById("topRight").innerText = "PTS: " + points + " | CH: " + level + (gameMode === "solo" ? "/100,000" : "");
   document.getElementById("botLeft").innerText = (inCar && inCar.isTank) ? "HEAVY TANK CANNON (FIRE)" : reloading ? "RELOADING..." : (aiming ? "(AIM) " : "") + gunName + " | " + (godMod ? "INF" : clip) + " / " + reserve;
