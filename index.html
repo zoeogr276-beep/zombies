@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Zombies: Realistic Humans, Cars, Colosseum PVP & 6 Mega Mods</title>
+<title>Zombies: GTA-Style Humans & Cars, Colosseum PVP & 6 Mega Mods</title>
 <script>
 window.loadMqttLib = function(cb) {
   if (typeof mqtt !== "undefined") { if (cb) cb(); return; }
@@ -78,7 +78,7 @@ button:hover,button:focus{filter:brightness(1.3);outline:2px solid #ffd700}
 <div id="lobby" onclick="startMenuMusic()">
 <div class="z-side" style="left:2%">🧟</div>
 <div class="z-side" style="right:2%">🧟‍♂️</div>
-<h1 style="color:#ff1744;font-size:20px;margin:2px;z-index:35">ZOMBIES: REALISTIC HUMANS, CARS, COLOSSEUM PVP &amp; 6 MEGA MODS</h1>
+<h1 style="color:#ff1744;font-size:20px;margin:2px;z-index:35">ZOMBIES: GTA-STYLE HUMANS &amp; CARS, COLOSSEUM PVP &amp; 6 MEGA MODS</h1>
 <div class="row" style="background:rgba(0,40,60,.45);border:1px solid #00e5ff;border-radius:6px;padding:3px;margin:2px">
 <input id="playerNameIn" placeholder="YOUR NAME TAG" value="SANTIAGO" maxlength="14" onchange="loadPlayerData(this.value)" style="width:120px;text-align:center;border-color:#00ff88;color:#00ff88">
 <button onclick="hostMultiRoom()" style="background:#00695c;border-color:#00ff88">HOST 5-PLAYER ROOM</button>
@@ -131,7 +131,7 @@ const glCv = document.getElementById("glCanvas"), c2d = document.getElementById(
 const ctx2 = c2d.getContext("2d"), tagCtx = tagCv.getContext("2d"), gl = glCv.getContext("webgl") || glCv.getContext("experimental-webgl");
 function resizeAll() { glCv.width = c2d.width = tagCv.width = window.innerWidth; glCv.height = c2d.height = tagCv.height = window.innerHeight; if (gl) gl.viewport(0, 0, glCv.width, glCv.height); }
 window.addEventListener("resize", resizeAll); resizeAll();
-let uProj = null, uView = null, uModel = null, uColor = null, uCam = null, uFog = null, uFogDens = null, boxBuf = null, sphBuf = null, sphCount = 0, aPosLoc = 0, aNormLoc = 1;
+let uProj = null, uView = null, uModel = null, uColor = null, uCam = null, uFog = null, uFogDens = null, boxBuf = null, cylBuf = null, cylCount = 0, wedgeBuf = null, aPosLoc = 0, aNormLoc = 1;
 if (gl) {
   const vsSrc = "attribute vec3 aPos;attribute vec3 aNorm;uniform mat4 uProj;uniform mat4 uView;uniform mat4 uModel;varying vec3 vNorm;varying vec3 vWorld;void main(){vec4 wp=uModel*vec4(aPos,1.0);vWorld=wp.xyz;vNorm=mat3(uModel)*aNorm;gl_Position=uProj*uView*wp;}";
   const fsSrc = "precision mediump float;varying vec3 vNorm;varying vec3 vWorld;uniform vec3 uColor;uniform vec3 uCam;uniform vec3 uFog;uniform float uFogDens;void main(){vec3 n=normalize(vNorm);vec3 l=normalize(vec3(0.45,0.88,0.35));float d=max(dot(n,l),0.0)*0.68+0.32;float dist=length(vWorld-uCam);float fl=clamp(1.0-dist/44.0,0.0,1.0)*0.42;vec3 col=uColor*(d+fl);float f=clamp(exp(-dist*uFogDens),0.0,1.0);gl_FragColor=vec4(mix(uFog,col,f),1.0);}";
@@ -141,26 +141,36 @@ if (gl) {
   uProj = gl.getUniformLocation(prog, "uProj"); uView = gl.getUniformLocation(prog, "uView"); uModel = gl.getUniformLocation(prog, "uModel"); uColor = gl.getUniformLocation(prog, "uColor"); uCam = gl.getUniformLocation(prog, "uCam"); uFog = gl.getUniformLocation(prog, "uFog"); uFogDens = gl.getUniformLocation(prog, "uFogDens");
   const boxVerts = new Float32Array(new Array(-0.5,-0.5,0.5,0,0,1,0.5,-0.5,0.5,0,0,1,0.5,0.5,0.5,0,0,1,-0.5,-0.5,0.5,0,0,1,0.5,0.5,0.5,0,0,1,-0.5,0.5,0.5,0,0,1,0.5,-0.5,-0.5,0,0,-1,-0.5,-0.5,-0.5,0,0,-1,-0.5,0.5,-0.5,0,0,-1,0.5,-0.5,-0.5,0,0,-1,-0.5,0.5,-0.5,0,0,-1,0.5,0.5,-0.5,0,0,-1,-0.5,0.5,0.5,0,1,0,0.5,0.5,0.5,0,1,0,0.5,0.5,-0.5,0,1,0,-0.5,0.5,0.5,0,1,0,0.5,0.5,-0.5,0,1,0,-0.5,0.5,-0.5,0,1,0,-0.5,-0.5,-0.5,0,-1,0,0.5,-0.5,-0.5,0,-1,0,0.5,-0.5,0.5,0,-1,0,-0.5,-0.5,-0.5,0,-1,0,0.5,-0.5,0.5,0,-1,0,-0.5,-0.5,0.5,0,-1,0,0.5,-0.5,0.5,1,0,0,0.5,-0.5,-0.5,1,0,0,0.5,0.5,-0.5,1,0,0,0.5,-0.5,0.5,1,0,0,0.5,0.5,-0.5,1,0,0,0.5,0.5,0.5,1,0,0,-0.5,-0.5,-0.5,-1,0,0,-0.5,-0.5,0.5,-1,0,0,-0.5,0.5,0.5,-1,0,0,-0.5,-0.5,-0.5,-1,0,0,-0.5,0.5,0.5,-1,0,0,-0.5,0.5,-0.5,-1,0,0));
   boxBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, boxBuf); gl.bufferData(gl.ARRAY_BUFFER, boxVerts, gl.STATIC_DRAW);
-  const sArr = new Array(), rings = 10, segs = 14;
-  for (let i = 0; i < rings; i++) {
-    const t1 = (i / rings) * Math.PI, t2 = ((i + 1) / rings) * Math.PI;
-    for (let j = 0; j < segs; j++) {
-      const p1 = (j / segs) * Math.PI * 2, p2 = ((j + 1) / segs) * Math.PI * 2;
-      const vA = new Array(Math.sin(t1)*Math.cos(p1), Math.cos(t1), Math.sin(t1)*Math.sin(p1));
-      const vB = new Array(Math.sin(t2)*Math.cos(p1), Math.cos(t2), Math.sin(t2)*Math.sin(p1));
-      const vC = new Array(Math.sin(t2)*Math.cos(p2), Math.cos(t2), Math.sin(t2)*Math.sin(p2));
-      const vD = new Array(Math.sin(t1)*Math.cos(p2), Math.cos(t1), Math.sin(t1)*Math.sin(p2));
-      sArr.push(vA.at(0)*0.5,vA.at(1)*0.5,vA.at(2)*0.5,vA.at(0),vA.at(1),vA.at(2), vB.at(0)*0.5,vB.at(1)*0.5,vB.at(2)*0.5,vB.at(0),vB.at(1),vB.at(2), vC.at(0)*0.5,vC.at(1)*0.5,vC.at(2)*0.5,vC.at(0),vC.at(1),vC.at(2), vA.at(0)*0.5,vA.at(1)*0.5,vA.at(2)*0.5,vA.at(0),vA.at(1),vA.at(2), vC.at(0)*0.5,vC.at(1)*0.5,vC.at(2)*0.5,vC.at(0),vC.at(1),vC.at(2), vD.at(0)*0.5,vD.at(1)*0.5,vD.at(2)*0.5,vD.at(0),vD.at(1),vD.at(2));
-    }
+  const cArr = new Array(), segs = 12;
+  for (let j = 0; j < segs; j++) {
+    const a1 = (j / segs) * Math.PI * 2, a2 = ((j + 1) / segs) * Math.PI * 2, c1 = Math.cos(a1), s1 = Math.sin(a1), c2 = Math.cos(a2), s2 = Math.sin(a2);
+    cArr.push(c1*0.5,-0.5,s1*0.5,c1,0,s1, c2*0.5,-0.5,s2*0.5,c2,0,s2, c2*0.5,0.5,s2*0.5,c2,0,s2, c1*0.5,-0.5,s1*0.5,c1,0,s1, c2*0.5,0.5,s2*0.5,c2,0,s2, c1*0.5,0.5,s1*0.5,c1,0,s1);
+    cArr.push(0,0.5,0,0,1,0, c1*0.5,0.5,s1*0.5,0,1,0, c2*0.5,0.5,s2*0.5,0,1,0);
+    cArr.push(0,-0.5,0,0,-1,0, c2*0.5,-0.5,s2*0.5,0,-1,0, c1*0.5,-0.5,s1*0.5,0,-1,0);
   }
-  sphBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, sphBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sArr), gl.STATIC_DRAW); sphCount = sArr.length / 6;
+  cylBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, cylBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cArr), gl.STATIC_DRAW); cylCount = cArr.length / 6;
+  const wVerts = new Float32Array(new Array(-0.5,-0.5,0.5,0,0.7,0.7, 0.5,-0.5,0.5,0,0.7,0.7, 0.5,0.5,-0.5,0,0.7,0.7, -0.5,-0.5,0.5,0,0.7,0.7, 0.5,0.5,-0.5,0,0.7,0.7, -0.5,0.5,-0.5,0,0.7,0.7, -0.5,-0.5,-0.5,0,0,-1, 0.5,-0.5,-0.5,0,0,-1, 0.5,0.5,-0.5,0,0,-1, -0.5,-0.5,-0.5,0,0,-1, 0.5,0.5,-0.5,0,0,-1, -0.5,0.5,-0.5,0,0,-1, -0.5,-0.5,-0.5,0,-1,0, 0.5,-0.5,0.5,0,-1,0, 0.5,-0.5,-0.5,0,-1,0, -0.5,-0.5,-0.5,0,-1,0, -0.5,-0.5,0.5,0,-1,0, 0.5,-0.5,0.5,0,-1,0, 0.5,-0.5,0.5,1,0,0, 0.5,-0.5,-0.5,1,0,0, 0.5,0.5,-0.5,1,0,0, -0.5,-0.5,-0.5,-1,0,0, -0.5,-0.5,0.5,-1,0,0, -0.5,0.5,-0.5,-1,0,0));
+  wedgeBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, wedgeBuf); gl.bufferData(gl.ARRAY_BUFFER, wVerts, gl.STATIC_DRAW);
   gl.enableVertexAttribArray(aPosLoc); gl.enableVertexAttribArray(aNormLoc);
 }
 function bindMesh(buf) { gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 24, 0); gl.vertexAttribPointer(aNormLoc, 3, gl.FLOAT, false, 24, 12); }
 function matPersp(fov, asp, n, f) { const t = 1 / Math.tan(fov / 2), nf = 1 / (n - f); return new Float32Array(new Array(t / asp,0,0,0, 0,t,0,0, 0,0,(f + n) * nf,-1, 0,0,2 * f * n * nf,0)); }
 function matView(x, y, z, yawA, pitchA) { const fx = Math.sin(yawA) * Math.cos(pitchA), fy = Math.sin(pitchA), fz = -Math.cos(yawA) * Math.cos(pitchA), rx = Math.cos(yawA), ry = 0, rz = Math.sin(yawA), ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx; return new Float32Array(new Array(rx, ux, -fx, 0, ry, uy, -fy, 0, rz, uz, -fz, 0, -(rx * x + ry * y + rz * z), -(ux * x + uy * y + uz * z), (fx * x + fy * y + fz * z), 1)); }
 function drawCube(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(boxBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, 36); }
-function drawSphere(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(sphBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, sphCount); }
+function drawWedge(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(wedgeBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, 24); }
+function drawCyl(x, y, z, sx, sy, sz, rotY, col) { if (!gl) return; bindMesh(cylBuf); const c = Math.cos(rotY), s = Math.sin(rotY), m = new Float32Array(new Array(c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, x, y, z, 1)); gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, cylCount); }
+function drawLimb(p1, p2, rThick, col) {
+  if (!gl) return; bindMesh(cylBuf);
+  const dx = p2.at(0) - p1.at(0), dy = p2.at(1) - p1.at(1), dz = p2.at(2) - p1.at(2), len = Math.hypot(dx, dy, dz);
+  if (len < 0.001) return;
+  const ux = dx / len, uy = dy / len, uz = dz / len;
+  let rx = uz, ry = 0, rz = -ux, rl = Math.hypot(rx, rz);
+  if (rl < 0.001) { rx = 1; rz = 0; } else { rx /= rl; rz /= rl; }
+  const fx = uy * rz - uz * ry, fy = uz * rx - ux * rz, fz = ux * ry - uy * rx;
+  const mx = (p1.at(0) + p2.at(0)) * 0.5, my = (p1.at(1) + p2.at(1)) * 0.5, mz = (p1.at(2) + p2.at(2)) * 0.5;
+  const m = new Float32Array(new Array(rx * rThick, ry * rThick, rz * rThick, 0, ux * len, uy * len, uz * len, 0, fx * rThick, fy * rThick, fz * rThick, 0, mx, my, mz, 1));
+  gl.uniformMatrix4fv(uModel, false, m); gl.uniform3fv(uColor, col); gl.drawArrays(gl.TRIANGLES, 0, cylCount);
+}
 function project3DToScreen(wx, wy, wz, camX, camY, camZ) { const dx = wx - camX, dy = wy - camY, dz = wz - camZ, fx = Math.sin(yaw) * Math.cos(pitch), fy = Math.sin(pitch), fz = -Math.cos(yaw) * Math.cos(pitch), rx = Math.cos(yaw), rz = Math.sin(yaw), ux = -Math.sin(yaw) * Math.sin(pitch), uy = Math.cos(pitch), uz = Math.cos(yaw) * Math.sin(pitch), cz = dx * fx + dy * fy + dz * fz; if (cz <= 0.4) return null; const cx = dx * rx + dz * rz, cy = dx * ux + dy * uy + dz * uz, f = 1 / Math.tan(curFov / 2), asp = tagCv.width / tagCv.height; return { x: (cx * (f / asp) / cz + 1) * 0.5 * tagCv.width, y: (1 - cy * f / cz) * 0.5 * tagCv.height }; }
 let started = false, difficulty = "medium", gameMode = "campaign", viewMode = gl ? 1 : 0, robotMod = false, horrorMod = false, godMod = false, cyberMod = false, titanMod = false, turboMod = false, stormMod = false, vampMod = false, gravMod = false, aiming = false, curFov = 1.18, touchForced = false;
 let hp = 100, shield = 100, points = 500, level = 1, pvpWins = 0, clip = 12, maxClip = 12, reserve = 180, dmg = 55, reloading = false, reloadStart = 0, gunName = "M1911 PISTOL";
@@ -294,85 +304,88 @@ function buildLevel(lvl) {
   updateQuestHud();
 }
 function drawRiggedGL(x, z, type, sc, phase, yBase, fixedYaw, skinId, emoteId) {
-  const isRob = (type === "robot"), isTG = (type === "tg"), isMate = (type === "mate"), isGold = (type === "gold"), isBoom = (type === "boomer"), isAcid = (type === "acid"), isShad = (type === "shadow");
+  const isRob = (type === "robot"), isTG = (type === "tg"), isMate = (type === "mate");
   const sk = isMate ? getSkinColors(skinId) : null;
-  const ang = (fixedYaw !== undefined) ? fixedYaw : Math.atan2(px - x, pz - z), w = Date.now() * 0.008 + phase, yb = yBase || 0;
-  const cShirt = isMate ? sk.suit : isTG ? new Array(0.95, 0.78, 0.1) : isGold ? new Array(0.95, 0.78, 0.12) : isBoom ? new Array(0.75, 0.18, 0.10) : isAcid ? new Array(0.18, 0.45, 0.22) : isShad ? new Array(0.14, 0.08, 0.22) : isRob ? new Array(0.32, 0.40, 0.48) : new Array(0.24, 0.34, 0.42);
-  const cPants = isMate ? sk.pants : isRob ? new Array(0.20, 0.25, 0.30) : new Array(0.16, 0.20, 0.28);
-  const cSkin = isMate ? sk.skin : isTG ? new Array(0.84, 0.65, 0.48) : isGold ? new Array(1.0, 0.86, 0.25) : isBoom ? new Array(0.55, 0.42, 0.36) : isAcid ? new Array(0.45, 0.72, 0.42) : isShad ? new Array(0.26, 0.18, 0.34) : isRob ? new Array(0.62, 0.70, 0.76) : new Array(0.44, 0.54, 0.42);
-  const cHair = isMate ? sk.hair : isTG ? new Array(0.15, 0.10, 0.06) : isGold ? new Array(1.0, 0.92, 0.35) : isBoom ? new Array(0.22, 0.18, 0.16) : isAcid ? new Array(0.12, 0.25, 0.10) : isShad ? new Array(0.08, 0.04, 0.12) : new Array(0.16, 0.14, 0.12);
-  const cEye = isMate ? new Array(0.12, 0.22, 0.35) : isTG ? new Array(0.08, 0.08, 0.08) : isGold ? WHITE : isBoom ? new Array(1, 0.85, 0.1) : isAcid ? new Array(0.6, 1, 0.1) : isShad ? new Array(0.85, 0.2, 1) : isRob ? new Array(0, 0.9, 1) : new Array(0.95, 0.18, 0.18);
-  const em = emoteId || 0, emType = em > 0 ? ((em - 1) % 10) + 1 : 0, spinAng = (emType === 5) ? ang + w * 2.5 : ang;
-  const danceY = (emType === 2 || emType === 6) ? Math.abs(Math.sin(w * 2.2)) * 0.28 : 0, legOff = Math.sin(w) * 0.26 * sc;
-  const cosP = Math.cos(spinAng + Math.PI / 2), sinP = Math.sin(spinAng + Math.PI / 2), cosF = Math.cos(spinAng), sinF = Math.sin(spinAng);
-  const pt = function(fwd, side, up) { return new Array(x + cosP * side * sc + sinF * fwd * sc, yb + danceY + up * sc, z + sinP * side * sc + cosF * fwd * sc); };
-  const lFoot = pt(legOff, 0.18, 0.12), rFoot = pt(-legOff, -0.18, 0.12);
-  drawSphere(lFoot.at(0), lFoot.at(1), lFoot.at(2), 0.22 * sc, 0.22 * sc, 0.34 * sc, spinAng, new Array(0.08, 0.08, 0.10));
-  drawSphere(rFoot.at(0), rFoot.at(1), rFoot.at(2), 0.22 * sc, 0.22 * sc, 0.34 * sc, spinAng, new Array(0.08, 0.08, 0.10));
-  const lLeg = pt(legOff * 0.6, 0.18, 0.62), rLeg = pt(-legOff * 0.6, -0.18, 0.62);
-  drawSphere(lLeg.at(0), lLeg.at(1), lLeg.at(2), 0.26 * sc, 0.88 * sc, 0.26 * sc, spinAng, cPants);
-  drawSphere(rLeg.at(0), rLeg.at(1), rLeg.at(2), 0.26 * sc, 0.88 * sc, 0.26 * sc, spinAng, cPants);
-  const hip = pt(0, 0, 1.08), chest = pt(isMate ? 0 : 0.06, 0, 1.58), neck = pt(isMate ? 0 : 0.08, 0, 1.98);
-  drawSphere(hip.at(0), hip.at(1), hip.at(2), (isBoom ? 0.85 : 0.62) * sc, 0.42 * sc, (isBoom ? 0.62 : 0.38) * sc, spinAng, cPants);
-  drawSphere(chest.at(0), chest.at(1), chest.at(2), (isBoom ? 1.05 : 0.72) * sc, 0.78 * sc, (isBoom ? 0.75 : 0.42) * sc, spinAng, cShirt);
-  drawSphere(neck.at(0), neck.at(1), neck.at(2), 0.20 * sc, 0.24 * sc, 0.20 * sc, spinAng, cSkin);
+  const ang = (fixedYaw !== undefined) ? fixedYaw : Math.atan2(px - x, pz - z);
+  const w = Date.now() * 0.008 + phase, yb = yBase || 0;
+  const cMap = { tg: new Array(0.95,0.78,0.1), gold: new Array(0.95,0.78,0.12), boomer: new Array(0.68,0.16,0.10), acid: new Array(0.16,0.42,0.20), shadow: new Array(0.12,0.08,0.20), robot: new Array(0.32,0.40,0.48), zombie: new Array(0.22,0.30,0.38) };
+  const sMap = { tg: new Array(0.84,0.65,0.48), gold: new Array(1.0,0.86,0.25), boomer: new Array(0.55,0.42,0.36), acid: new Array(0.45,0.72,0.42), shadow: new Array(0.26,0.18,0.34), robot: new Array(0.62,0.70,0.76), zombie: new Array(0.44,0.54,0.42) };
+  const cJacket = isMate ? sk.suit : (Reflect.get(cMap, type) || cMap.zombie);
+  const cSkin = isMate ? sk.skin : (Reflect.get(sMap, type) || sMap.zombie);
+  const cPants = isMate ? sk.pants : new Array(0.14, 0.18, 0.24);
+  const cHair = isMate ? sk.hair : new Array(0.15, 0.13, 0.11);
+  const cEye = isMate ? new Array(0.12,0.22,0.35) : isRob ? new Array(0,0.9,1) : new Array(0.95,0.18,0.18);
+  const em = emoteId || 0, emType = em > 0 ? ((em - 1) % 10) + 1 : 0;
+  const spinAng = (emType === 5) ? ang + w * 2.5 : ang;
+  const danceY = (emType === 2 || emType === 6) ? Math.abs(Math.sin(w * 2.2)) * 0.28 : 0;
+  const stride = Math.sin(w) * 0.32, knee = Math.abs(Math.cos(w)) * 0.14;
+  const cosP = Math.cos(spinAng + Math.PI / 2), sinP = Math.sin(spinAng + Math.PI / 2);
+  const cosF = Math.cos(spinAng), sinF = Math.sin(spinAng);
+  const pt = function(f, s, u) { return new Array(x + cosP * s * sc + sinF * f * sc, yb + danceY + u * sc, z + sinP * s * sc + cosF * f * sc); };
+  drawLimb(pt(0, 0.15, 0.98), pt(stride * 0.65, 0.15, 0.54 + knee), 0.21 * sc, cPants);
+  drawLimb(pt(stride * 0.65, 0.15, 0.54 + knee), pt(stride, 0.15, 0.10), 0.16 * sc, cPants);
+  drawLimb(pt(0, -0.15, 0.98), pt(-stride * 0.65, -0.15, 0.54 + knee), 0.21 * sc, cPants);
+  drawLimb(pt(-stride * 0.65, -0.15, 0.54 + knee), pt(-stride, -0.15, 0.10), 0.16 * sc, cPants);
+  const waist = pt(0, 0, 1.02), chest = pt(isMate ? 0.02 : 0.08, 0, 1.56), headC = pt(isMate ? 0.03 : 0.12, 0, 1.94);
+  drawLimb(waist, chest, (type === "boomer" ? 0.82 : 0.54) * sc, cJacket);
+  drawLimb(pt(isMate ? 0.02 : 0.10, 0, 1.72), headC, 0.15 * sc, cSkin);
   const armUp = (em > 0 || glidingActive);
-  const lSh = pt(0, 0.42, 1.82), rSh = pt(0, -0.42, 1.82);
-  drawSphere(lSh.at(0), lSh.at(1), lSh.at(2), 0.24 * sc, 0.24 * sc, 0.24 * sc, spinAng, cShirt);
-  drawSphere(rSh.at(0), rSh.at(1), rSh.at(2), 0.24 * sc, 0.24 * sc, 0.24 * sc, spinAng, cShirt);
-  const lArm = pt(armUp ? 0.12 : 0.26, 0.46, armUp ? 2.18 + Math.sin(w * 2) * 0.12 : 1.62);
-  const rArm = pt(armUp ? 0.12 : 0.26, -0.46, armUp ? 2.18 - Math.sin(w * 2) * 0.12 : 1.62);
-  drawSphere(lArm.at(0), lArm.at(1), lArm.at(2), 0.19 * sc, armUp ? 0.68 * sc : 0.22 * sc, armUp ? 0.19 * sc : 0.68 * sc, spinAng, cSkin);
-  drawSphere(rArm.at(0), rArm.at(1), rArm.at(2), 0.19 * sc, armUp ? 0.68 * sc : 0.22 * sc, armUp ? 0.19 * sc : 0.68 * sc, spinAng, cSkin);
-  const head = pt(isMate ? 0.02 : 0.10, 0, 2.26);
-  drawSphere(head.at(0), head.at(1), head.at(2), 0.44 * sc, 0.52 * sc, 0.46 * sc, spinAng, cSkin);
-  const nose = pt(isMate ? 0.24 : 0.32, 0, 2.25), mouth = pt(isMate ? 0.21 : 0.29, 0, 2.13);
-  drawSphere(nose.at(0), nose.at(1), nose.at(2), 0.08 * sc, 0.10 * sc, 0.10 * sc, spinAng, cSkin);
-  drawSphere(mouth.at(0), mouth.at(1), mouth.at(2), 0.15 * sc, 0.04 * sc, 0.06 * sc, spinAng, isMate ? new Array(0.65, 0.28, 0.28) : new Array(0.18, 0.04, 0.04));
-  const lEye = pt(isMate ? 0.21 : 0.29, 0.10, 2.31), rEye = pt(isMate ? 0.21 : 0.29, -0.10, 2.31);
-  drawSphere(lEye.at(0), lEye.at(1), lEye.at(2), 0.07 * sc, 0.06 * sc, 0.05 * sc, spinAng, cEye);
-  drawSphere(rEye.at(0), rEye.at(1), rEye.at(2), 0.07 * sc, 0.06 * sc, 0.05 * sc, spinAng, cEye);
-  if (!isRob) {
-    const hStyle = isMate ? sk.hairStyle : 1;
-    const hTop = pt(isMate ? 0.0 : 0.08, 0, 2.46);
-    drawSphere(hTop.at(0), hTop.at(1), hTop.at(2), 0.47 * sc, (hStyle === 1 ? 0.34 : 0.24) * sc, 0.49 * sc, spinAng, cHair);
-    if (hStyle === 2) { const hBack = pt(-0.18, 0, 2.18); drawSphere(hBack.at(0), hBack.at(1), hBack.at(2), 0.46 * sc, 0.56 * sc, 0.24 * sc, spinAng, cHair); }
-    if (hStyle === 3) { const pony = pt(-0.28, 0, 2.24); drawSphere(pony.at(0), pony.at(1), pony.at(2), 0.16 * sc, 0.44 * sc, 0.18 * sc, spinAng, cHair); }
-  }
-  if (isTG) { const hat = pt(0.08, 0, 2.54); drawSphere(hat.at(0), hat.at(1), hat.at(2), 0.74 * sc, 0.14 * sc, 0.74 * sc, spinAng, new Array(1, 0.84, 0)); }
+  const lElb = pt(armUp ? 0.08 : -stride * 0.4, 0.40, armUp ? 1.88 : 1.32);
+  const rElb = pt(armUp ? 0.08 : stride * 0.4, -0.40, armUp ? 1.88 : 1.32);
+  const lHnd = pt(armUp ? 0.14 : (isMate ? -stride * 0.6 + 0.18 : 0.42), 0.42, armUp ? 2.18 : (isMate ? 1.06 : 1.44));
+  const rHnd = pt(armUp ? 0.14 : (isMate ? stride * 0.6 + 0.18 : 0.42), -0.42, armUp ? 2.18 : (isMate ? 1.06 : 1.44));
+  drawLimb(pt(0.02, 0.34, 1.62), lElb, 0.15 * sc, cJacket); drawLimb(lElb, lHnd, 0.12 * sc, cSkin);
+  drawLimb(pt(0.02, -0.34, 1.62), rElb, 0.15 * sc, cJacket); drawLimb(rElb, rHnd, 0.12 * sc, cSkin);
+  drawCyl(headC.at(0), headC.at(1), headC.at(2), 0.32 * sc, 0.36 * sc, 0.34 * sc, spinAng, cSkin);
+  const lEye = pt(isMate ? 0.18 : 0.27, 0.075, 1.98), rEye = pt(isMate ? 0.18 : 0.27, -0.075, 1.98);
+  drawCube(lEye.at(0), lEye.at(1), lEye.at(2), 0.055 * sc, 0.032 * sc, 0.03 * sc, spinAng, cEye);
+  drawCube(rEye.at(0), rEye.at(1), rEye.at(2), 0.055 * sc, 0.032 * sc, 0.03 * sc, spinAng, cEye);
+  const nose = pt(isMate ? 0.20 : 0.29, 0, 1.94), hCap = pt(isMate ? 0.01 : 0.10, 0, 2.13);
+  drawCube(nose.at(0), nose.at(1), nose.at(2), 0.05 * sc, 0.08 * sc, 0.07 * sc, spinAng, cSkin);
+  if (!isRob) drawCyl(hCap.at(0), hCap.at(1), hCap.at(2), 0.35 * sc, 0.14 * sc, 0.37 * sc, spinAng, isTG ? new Array(1,0.84,0) : cHair);
 }
-function drawBattleBusGL(bx, by, bz) { drawCube(bx, by, bz, 3.6, 2.5, 9.2, 0, new Array(0.08, 0.38, 0.88)); drawCube(bx, by + 1.4, bz, 3.2, 0.3, 8.6, 0, new Array(0.95, 0.82, 0.1)); drawSphere(bx, by + 5.8, bz, 5.4, 3.8, 7.8, 0, new Array(0.0, 0.78, 1.0)); drawCube(bx, by + 3.6, bz, 0.4, 2.2, 0.4, 0, new Array(0.85, 0.85, 0.9)); drawSphere(bx + 2.1, by - 0.3, bz + 2.0, 0.9, 0.9, 2.4, 0, new Array(1.0, 0.45, 0.0)); drawSphere(bx - 2.1, by - 0.3, bz + 2.0, 0.9, 0.9, 2.4, 0, new Array(1.0, 0.45, 0.0)); }
-function drawGliderGL(gx, gy, gz, skinId) { const sk = getSkinColors(skinId); drawSphere(gx, gy + 1.45, gz, 4.6, 0.22, 1.6, -yaw, sk.suit); drawSphere(gx, gy + 1.55, gz, 2.2, 0.26, 1.8, -yaw, sk.hair); drawCube(gx, gy + 0.85, gz, 0.14, 1.2, 0.14, -yaw, new Array(0.85, 0.88, 0.92)); }
-function drawGreenBottlePortal(px0, pz0, isOpen) { const spin = Date.now() * 0.003, bob = Math.sin(Date.now() * 0.005) * 0.25; drawSphere(px0, 1.4 + bob, pz0, 1.6, 2.2, 1.6, spin, isOpen ? new Array(0.0, 1.0, 0.35) : new Array(0.08, 0.35, 0.15)); drawSphere(px0, 2.8 + bob, pz0, 0.7, 0.9, 0.7, -spin, isOpen ? new Array(0.45, 1.0, 0.65) : new Array(0.15, 0.45, 0.2)); drawSphere(px0, 3.35 + bob, pz0, 0.82, 0.28, 0.82, spin, new Array(0.85, 0.65, 0.2)); }
+function drawBattleBusGL(bx, by, bz) {
+  drawCube(bx, by, bz, 3.6, 2.5, 9.2, 0, new Array(0.08, 0.38, 0.88));
+  drawCyl(bx, by + 5.8, bz, 5.2, 3.8, 7.6, 0, new Array(0.0, 0.78, 1.0));
+  drawCube(bx, by + 3.6, bz, 0.4, 2.2, 0.4, 0, new Array(0.85, 0.85, 0.9));
+}
+function drawGliderGL(gx, gy, gz, skinId) {
+  const sk = getSkinColors(skinId);
+  drawWedge(gx, gy + 1.45, gz, 4.6, 0.22, 1.6, -yaw, sk.suit);
+  drawCube(gx, gy + 0.85, gz, 0.14, 1.2, 0.14, -yaw, new Array(0.85, 0.88, 0.92));
+}
+function drawGreenBottlePortal(px0, pz0, isOpen) {
+  const spin = Date.now() * 0.003, bob = Math.sin(Date.now() * 0.005) * 0.25;
+  drawCyl(px0, 1.4 + bob, pz0, 1.5, 2.2, 1.5, spin, isOpen ? new Array(0.0, 1.0, 0.35) : new Array(0.08, 0.35, 0.15));
+  drawCyl(px0, 2.8 + bob, pz0, 0.65, 0.85, 0.65, -spin, new Array(0.45, 1.0, 0.65));
+}
 function drawTankGL(tk) {
-  const c = Math.cos(tk.rot), s = Math.sin(tk.rot), tRot = (tk.turretRot !== undefined) ? tk.turretRot : tk.rot, ts = Math.sin(tRot), tc = Math.cos(tRot);
+  const c = Math.cos(tk.rot), s = Math.sin(tk.rot), tRot = (tk.turretRot !== undefined) ? tk.turretRot : tk.rot;
+  const ts = Math.sin(tRot), tc = Math.cos(tRot);
   drawCube(tk.x, 0.95, tk.z, 3.8, 1.05, 6.2, -tk.rot, tk.col || new Array(0.22, 0.27, 0.2));
   drawCube(tk.x + c * 2.1, 0.65, tk.z + s * 2.1, 0.75, 1.05, 6.6, -tk.rot, new Array(0.10, 0.11, 0.12));
   drawCube(tk.x - c * 2.1, 0.65, tk.z - s * 2.1, 0.75, 1.05, 6.6, -tk.rot, new Array(0.10, 0.11, 0.12));
-  Array.from({ length: 4 }, (_, wIdx) => {
-    const off = -2.1 + wIdx * 1.4;
-    drawSphere(tk.x + c * 2.15 + s * off, 0.62, tk.z + s * 2.15 - c * off, 0.82, 0.95, 0.95, -tk.rot, new Array(0.24, 0.28, 0.22));
-    drawSphere(tk.x - c * 2.15 + s * off, 0.62, tk.z - s * 2.15 - c * off, 0.82, 0.95, 0.95, -tk.rot, new Array(0.24, 0.28, 0.22));
-  });
-  drawSphere(tk.x, 1.92, tk.z, 2.8, 1.05, 3.3, -tRot, new Array(0.28, 0.34, 0.25));
-  drawSphere(tk.x + ts * 3.1, 2.0, tk.z - tc * 3.1, 0.36, 0.36, 4.0, -tRot, new Array(0.16, 0.18, 0.16));
+  drawCyl(tk.x, 1.92, tk.z, 2.8, 0.95, 3.3, -tRot, new Array(0.28, 0.34, 0.25));
+  drawLimb(new Array(tk.x + ts * 1.4, 2.0, tk.z - tc * 1.4), new Array(tk.x + ts * 5.0, 2.0, tk.z - tc * 5.0), 0.32, new Array(0.16, 0.18, 0.16));
 }
 function drawCarGL(car) {
   if (car.isTank) { drawTankGL(car); return; }
   const c = Math.cos(car.rot), s = Math.sin(car.rot);
-  drawCube(car.x, 0.66, car.z, 2.15, 0.62, 4.5, -car.rot, car.col);
-  drawSphere(car.x + s * 1.35, 0.72, car.z - c * 1.35, 2.05, 0.56, 1.85, -car.rot, car.col);
-  drawSphere(car.x - s * 0.25, 1.28, car.z + c * 0.25, 1.82, 0.76, 2.35, -car.rot, new Array(0.12, 0.18, 0.24));
-  drawCube(car.x - s * 2.05, 1.15, car.z + c * 2.05, 2.0, 0.12, 0.35, -car.rot, new Array(0.12, 0.12, 0.15));
-  drawSphere(car.x + c * 0.72 + s * 2.22, 0.68, car.z + s * 0.72 - c * 2.22, 0.32, 0.22, 0.22, -car.rot, new Array(1.0, 0.96, 0.65));
-  drawSphere(car.x - c * 0.72 + s * 2.22, 0.68, car.z - s * 0.72 - c * 2.22, 0.32, 0.22, 0.22, -car.rot, new Array(1.0, 0.96, 0.65));
-  drawSphere(car.x + c * 0.72 - s * 2.22, 0.72, car.z + s * 0.72 + c * 2.22, 0.36, 0.20, 0.20, -car.rot, new Array(1.0, 0.10, 0.10));
-  drawSphere(car.x - c * 0.72 - s * 2.22, 0.72, car.z - s * 0.72 + c * 2.22, 0.36, 0.20, 0.20, -car.rot, new Array(1.0, 0.10, 0.10));
-  const wPos = new Array(new Array(1.06, 1.35), new Array(-1.06, 1.35), new Array(1.06, -1.35), new Array(-1.06, -1.35));
+  drawCube(car.x, 0.62, car.z, 2.12, 0.56, 4.6, -car.rot, car.col);
+  drawWedge(car.x + s * 1.65, 0.66, car.z - c * 1.65, 2.08, 0.52, 1.3, -car.rot + Math.PI, car.col);
+  drawWedge(car.x + s * 0.65, 1.14, car.z - c * 0.65, 1.78, 0.54, 0.95, -car.rot + Math.PI, new Array(0.10, 0.16, 0.22));
+  drawCube(car.x - s * 0.35, 1.14, car.z + c * 0.35, 1.78, 0.54, 1.15, -car.rot, car.col);
+  drawWedge(car.x - s * 1.35, 1.14, car.z + c * 1.35, 1.78, 0.54, 0.95, -car.rot, new Array(0.10, 0.16, 0.22));
+  drawCube(car.x - s * 2.15, 1.12, car.z + c * 2.15, 2.05, 0.08, 0.32, -car.rot, new Array(0.10, 0.10, 0.12));
+  drawCube(car.x + c * 0.78 + s * 2.28, 0.66, car.z + s * 0.78 - c * 2.28, 0.36, 0.16, 0.12, -car.rot, new Array(1.0, 0.96, 0.65));
+  drawCube(car.x - c * 0.78 + s * 2.28, 0.66, car.z - s * 0.78 - c * 2.28, 0.36, 0.16, 0.12, -car.rot, new Array(1.0, 0.96, 0.65));
+  drawCube(car.x + c * 0.78 - s * 2.30, 0.68, car.z + s * 0.78 + c * 2.30, 0.42, 0.16, 0.10, -car.rot, new Array(1.0, 0.08, 0.08));
+  drawCube(car.x - c * 0.78 - s * 2.30, 0.68, car.z - s * 0.78 + c * 2.30, 0.42, 0.16, 0.10, -car.rot, new Array(1.0, 0.08, 0.08));
+  const wPos = new Array(new Array(1.08, 1.42), new Array(-1.08, 1.42), new Array(1.08, -1.42), new Array(-1.08, -1.42));
   wPos.forEach(wp => {
     const wx = car.x + c * wp.at(0) + s * wp.at(1), wz = car.z + s * wp.at(0) - c * wp.at(1);
-    drawSphere(wx, 0.44, wz, 0.34, 0.86, 0.86, -car.rot, new Array(0.08, 0.08, 0.10));
-    drawSphere(wx + c * (wp.at(0) > 0 ? 0.06 : -0.06), 0.44, wz + s * (wp.at(0) > 0 ? 0.06 : -0.06), 0.28, 0.46, 0.46, -car.rot, new Array(0.78, 0.82, 0.88));
+    drawLimb(new Array(wx - c * 0.16, 0.42, wz - s * 0.16), new Array(wx + c * 0.16, 0.42, wz + s * 0.16), 0.78, new Array(0.08, 0.08, 0.10));
+    drawLimb(new Array(wx - c * 0.18, 0.42, wz - s * 0.18), new Array(wx + c * 0.18, 0.42, wz + s * 0.18), 0.44, new Array(0.80, 0.84, 0.90));
   });
 }
 function drawFirstPersonGun() {
@@ -381,22 +394,22 @@ function drawFirstPersonGun() {
   const rec = Math.max(0, 1 - (Date.now() - lastFire) / 130) * 0.10, rp = reloading ? Math.min(1, (Date.now() - reloadStart) / 750) : 0, tilt = Math.sin(rp * Math.PI) * 0.12;
   const sideR = aiming ? 0.0 : 0.24, upOff = aiming ? -0.15 : -0.21;
   const pPart = function(f, r, u, sx, sy, sz, col) { drawCube(px + fx * f + rx * r + ux * u, py + fy * f + uy * u, pz + fz * f + rz * r + uz * u, sx, sy, sz, -yaw, col); };
-  const pSph = function(f, r, u, sx, sy, sz, col) { drawSphere(px + fx * f + rx * r + ux * u, py + fy * f + uy * u, pz + fz * f + rz * r + uz * u, sx, sy, sz, -yaw, col); };
+  const pPt = function(f, r, u) { return new Array(px + fx * f + rx * r + ux * u, py + fy * f + uy * u, pz + fz * f + rz * r + uz * u); };
   const sk = getSkinColors(mySkinId), steel = new Array(0.18, 0.21, 0.26), wood = new Array(0.44, 0.25, 0.13);
   if (gunName === "COMBAT SHOTGUN") { pPart(0.72 - rec, sideR, upOff - tilt, 0.07, 0.07, 0.78, new Array(0.11, 0.13, 0.16)); pPart(0.46 - rec, sideR, upOff - 0.06 - tilt, 0.08, 0.12, 0.28, wood); }
   else if (gunName === "PLASMA RIFLE") { pPart(0.70 - rec, sideR, upOff - tilt, 0.10, 0.13, 0.74, new Array(0.22, 0.27, 0.34)); pPart(0.74 - rec, sideR, upOff + 0.02 - tilt, 0.11, 0.05, 0.42, new Array(0, 0.85, 1)); }
   else if (gunName === "MINIGUN") { pPart(0.64 - rec, sideR, upOff - 0.04 - tilt, 0.18, 0.18, 0.45, steel); pPart(0.92 - rec, sideR, upOff - 0.01 - tilt, 0.08, 0.08, 0.55, new Array(0.11, 0.13, 0.16)); }
   else { pPart(0.62 - rec, sideR, upOff + 0.01 - tilt, 0.08, 0.08, 0.42, steel); pPart(0.50 - rec, sideR, upOff - 0.08 - tilt, 0.07, 0.16, 0.10, wood); }
-  pSph(0.48 - rec, sideR + 0.02, upOff - 0.09 - tilt, 0.11, 0.11, 0.14, sk.skin);
-  pSph(0.32 - rec, sideR + 0.08, upOff - 0.16 - tilt, 0.11, 0.11, 0.28, sk.suit);
+  drawLimb(pPt(0.18 - rec, sideR + 0.14, upOff - 0.22 - tilt), pPt(0.42 - rec, sideR + 0.03, upOff - 0.10 - tilt), 0.11, sk.suit);
+  drawLimb(pPt(0.42 - rec, sideR + 0.03, upOff - 0.10 - tilt), pPt(0.52 - rec, sideR + 0.01, upOff - 0.07 - tilt), 0.10, sk.skin);
   const lHandF = reloading ? 0.54 : 0.74 - rec, lHandU = reloading ? (upOff - 0.18 + Math.sin(rp * Math.PI) * 0.18) : (upOff - 0.05 - tilt);
-  pSph(lHandF, sideR - 0.05, lHandU, 0.11, 0.10, 0.14, sk.skin);
-  pSph(lHandF - 0.18, sideR - 0.12, lHandU - 0.09, 0.11, 0.11, 0.28, sk.suit);
-  if (rec > 0.04) pSph(1.05, sideR, upOff + 0.01, 0.20, 0.20, 0.20, cyberMod ? new Array(0, 0.9, 1) : new Array(1, 0.82, 0.18));
+  drawLimb(pPt(0.22 - rec, sideR - 0.22, upOff - 0.22), pPt(lHandF - 0.10, sideR - 0.08, lHandU - 0.04), 0.11, sk.suit);
+  drawLimb(pPt(lHandF - 0.10, sideR - 0.08, lHandU - 0.04), pPt(lHandF + 0.04, sideR - 0.02, lHandU), 0.10, sk.skin);
+  if (rec > 0.04) pPart(1.05, sideR, upOff + 0.01, 0.18, 0.18, 0.18, cyberMod ? new Array(0, 0.9, 1) : new Array(1, 0.82, 0.18));
 }
 function equipGun(t) { if (t === 1) { gunName = "M1911 PISTOL"; maxClip = 12; clip = 12; dmg = 55; } else if (t === 2) { gunName = "COMBAT SHOTGUN"; maxClip = 8; clip = 8; dmg = 140; } else if (t === 3) { gunName = "PLASMA RIFLE"; maxClip = 30; clip = 30; dmg = 95; } else { gunName = "MINIGUN"; maxClip = 80; clip = 80; dmg = 65; } reloading = false; playTone(760, 0.12, "triangle", 0.12); showMsg("EQUIPPED: " + gunName, 1800); }
-function endStoryCutscene() { if (!storyActive) return; storyActive = false; clearInterval(storyTimer); const sb = document.getElementById("storyBox"); if (sb) sb.style.display = "none"; if (gameMode === "pvp") { px = (Math.random() - 0.5) * 36; pz = (Math.random() - 0.5) * 36; py = 1.75; vy = 0; onGround = true; glidingActive = false; showMsg("COLOSSEUM FIGHT BEGINS! Grab Shield & Power-Ups — 1 Second Chance!", 4200); return; } glidingActive = true; py = 44.0; vy = -0.18; playTone(620, 0.35, "sine", 0.15); showMsg("GLIDER DEPLOYED! Steer with WASD down to your Car or Squad Tank!", 3800); speakVoice("Glider deployed! Drive your car or Squad Tank to escape the horde!", 0.95); }
-function playStoryCutscene() { storyActive = true; glidingActive = false; py = 46.0; vy = 0; const sb = document.getElementById("storyBox"), cap = document.getElementById("storyCaption"), spk = document.getElementById("storySpeaker"); if (!sb || !cap) { storyActive = false; return; } sb.style.display = "block"; const allies = Object.values(remotePlayers).map(r => r.name || "CHALLENGER"); const foeName = (allies.length > 0) ? allies.join(" and ") : "CHALLENGER"; if (spk) spk.innerText = (gameMode === "pvp") ? "COLOSSEUM GRAND NARRATOR" : (myName || "SANTIAGO") + " — BATTLE BUS BRIEFING"; const lines = (gameMode === "pvp") ? new Array("Welcome to " + locName + "! Tonight: " + myName + " versus " + foeName + "!", "Grab Cyan Shield Power-Ups and Gold Damage Boosts! You get ONE Second Chance — lose twice and you lose!") : new Array(locName, (myName || "SANTIAGO") + " versus the Horde: Hop in the Escape Car or Heavy Battle Tank, then grab the Green Bio-Bottle Portal!", "Drop in on my mark—good luck out there!"); let lineIdx = 0, charIdx = 0; cap.innerText = ""; speakVoice(lines.join(" "), 0.88); clearInterval(storyTimer); storyTimer = setInterval(function() { if (!storyActive) { clearInterval(storyTimer); return; } const cur = lines.at(lineIdx); if (cur && charIdx < cur.length) { cap.innerText += cur.charAt(charIdx++); } else { lineIdx++; if (lineIdx >= lines.length) { setTimeout(endStoryCutscene, 1500); clearInterval(storyTimer); } else { setTimeout(function() { if (storyActive) { cap.innerText = ""; charIdx = 0; } }, 900); } } }, 34); }
+function endStoryCutscene() { if (!storyActive) return; storyActive = false; clearInterval(storyTimer); const sb = document.getElementById("storyBox"); if (sb) sb.style.display = "none"; if (gameMode === "pvp") { px = (Math.random() - 0.5) * 36; pz = (Math.random() - 0.5) * 36; py = 1.75; vy = 0; onGround = true; glidingActive = false; showMsg("COLOSSEUM FIGHT BEGINS! Grab Shield & Power-Ups — 1 Second Chance!", 4200); return; } glidingActive = true; py = 44.0; vy = -0.18; playTone(620, 0.35, "sine", 0.15); showMsg("GLIDER DEPLOYED! Steer with WASD down to your Sports Car or Squad Tank!", 3800); speakVoice("Glider deployed! Drive your car or Squad Tank to escape the horde!", 0.95); }
+function playStoryCutscene() { storyActive = true; glidingActive = false; py = 46.0; vy = 0; const sb = document.getElementById("storyBox"), cap = document.getElementById("storyCaption"), spk = document.getElementById("storySpeaker"); if (!sb || !cap) { storyActive = false; return; } sb.style.display = "block"; const allies = Object.values(remotePlayers).map(r => r.name || "CHALLENGER"); const foeName = (allies.length > 0) ? allies.join(" and ") : "CHALLENGER"; if (spk) spk.innerText = (gameMode === "pvp") ? "COLOSSEUM GRAND NARRATOR" : (myName || "SANTIAGO") + " — BATTLE BUS BRIEFING"; const lines = (gameMode === "pvp") ? new Array("Welcome to " + locName + "! Tonight: " + myName + " versus " + foeName + "!", "Grab Cyan Shield Power-Ups and Gold Damage Boosts! You get ONE Second Chance — lose twice and you lose!") : new Array(locName, (myName || "SANTIAGO") + " versus the Horde: Hop in the Sports Car or Heavy Battle Tank, then grab the Green Bio-Bottle Portal!", "Drop in on my mark—good luck out there!"); let lineIdx = 0, charIdx = 0; cap.innerText = ""; speakVoice(lines.join(" "), 0.88); clearInterval(storyTimer); storyTimer = setInterval(function() { if (!storyActive) { clearInterval(storyTimer); return; } const cur = lines.at(lineIdx); if (cur && charIdx < cur.length) { cap.innerText += cur.charAt(charIdx++); } else { lineIdx++; if (lineIdx >= lines.length) { setTimeout(endStoryCutscene, 1500); clearInterval(storyTimer); } else { setTimeout(function() { if (storyActive) { cap.innerText = ""; charIdx = 0; } }, 900); } } }, 34); }
 function startGame(mode, fromNet) { myName = (document.getElementById("playerNameIn").value || "SANTIAGO").trim().toUpperCase(); gameMode = mode || "campaign"; started = true; hp = 100; shield = (gameMode === "pvp") ? 50 : 100; pvpSecondChance = true; pvpLost = false; powerBoost = 0; level = 1; clip = 12; maxClip = 12; reserve = 180; dmg = 55; gunName = "M1911 PISTOL"; document.getElementById("lobby").style.display = "none"; glCv.style.display = (viewMode > 0) ? "block" : "none"; c2d.style.display = (viewMode === 0) ? "block" : "none"; document.getElementById("crosshair").style.display = (viewMode > 0) ? "block" : "none"; if (touchForced || (window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) document.getElementById("touchUI").style.display = "block"; if (isHost && !fromNet && roomCode) sendRoomPacket({ t: "start", id: myNetId, mode: gameMode }); buildLevel(1); playStoryCutscene(); if (!window.loopStarted) { window.loopStarted = true; setInterval(spawnEnemy, 950); mainLoop(); } }
 function spawnEnemy() { if (!started || gameMode === "pvp" || storyActive || glidingActive || hp <= 0 || enemiesLeft <= 0 || enemies.length >= 28) return; if (roomCode && !isHost) return; const dm = Reflect.get(diffMults, difficulty) || diffMults.medium, r = Math.random(); let zType = "zombie", hpM = 1, spdM = 1; if (robotMod || gameMode === "robots" || (gameMode === "campaign" && level === 22) || r < 0.22) { zType = "robot"; hpM = 1.4; spdM = 1.18; } else if (r < 0.28) { zType = "gold"; hpM = 1.6; spdM = 1.48; showMsg("RARE GOLD ZOMBIE SPOTTED!", 2200); } else if (r < 0.37) { zType = "boomer"; hpM = 1.1; spdM = 1.1; } else if (r < 0.46) { zType = "acid"; hpM = 1.25; spdM = 1.15; } else if (r < 0.54) { zType = "shadow"; hpM = 0.9; spdM = 1.7; } const isBoss = (level % 10 === 0 && !tankBoss) || (titanMod && r < 0.35), ang = Math.random() * Math.PI * 2, dist = 28; enemies.push({ x: Math.max(-40, Math.min(40, px + Math.cos(ang) * dist)), z: Math.max(-40, Math.min(40, pz + Math.sin(ang) * dist)), hp: Math.ceil((isBoss ? (titanMod ? 3800 : 2400) : (90 + level * 15) * hpM) * dm.hp), zType: zType, isBoss: isBoss, isTitan: titanMod && isBoss, spd: (isBoss ? 0.06 : 0.068 * spdM) * dm.spd, phase: Math.random() * 6.28, freeze: 0 }); enemiesLeft--; updateQuestHud(); }
 window.addEventListener("blur", function() { Object.keys(keys).forEach(k => { Reflect.set(keys, k, false); }); draggingLook = false; tDX = 0; tDY = 0; setAimState(false); });
@@ -455,25 +468,25 @@ function mainLoop() {
     gl.uniformMatrix4fv(uProj, false, matPersp(curFov, glCv.width / glCv.height, 0.1, 350)); gl.uniformMatrix4fv(uView, false, matView(camX, camY, camZ, camYaw, storyActive ? -0.05 : pitch));
     gl.uniform3fv(uCam, new Array(camX, camY, camZ)); gl.uniform3fv(uFog, fogC); gl.uniform1f(uFogDens, mapTheme.isColosseum ? 0.004 : (isDark ? 0.028 : 0.014));
     drawCube(px, -0.25, pz, 500, 0.5, 500, 0, isDark ? new Array(0.04, 0.09, 0.05) : mapTheme.ground);
-    if (mapTheme.sunPos) drawSphere(px + mapTheme.sunPos.at(0), mapTheme.sunPos.at(1), pz + mapTheme.sunPos.at(2), 8.5, 8.5, 8.5, 0.4, new Array(1.0, 0.92, 0.35));
+    if (mapTheme.sunPos) drawCyl(px + mapTheme.sunPos.at(0), mapTheme.sunPos.at(1), pz + mapTheme.sunPos.at(2), 8.5, 8.5, 8.5, 0.4, new Array(1.0, 0.92, 0.35));
     walls.forEach(w => { const wh = w.h || 7.6; drawCube((w.x1 + w.x2) / 2, wh / 2, (w.z1 + w.z2) / 2, Math.max(1.4, Math.abs(w.x2 - w.x1)), wh, Math.max(1.4, Math.abs(w.z2 - w.z1)), 0, mapTheme.wall); });
     buildings.forEach(b => { drawCube(b.x, 4.0, b.z, 11.4, 0.25, 11.4, 0, new Array(0.28, 0.17, 0.1)); drawCube(b.x, 7.9, b.z, 12.6, 0.8, 12.6, 0, b.roof); });
     doors.forEach(d => drawCube(d.x + Math.cos(d.ang) * 1.2, 1.8, d.z + Math.sin(d.ang) * 1.2, 2.4, 3.6, 0.22, -d.ang, new Array(0.55, 0.32, 0.14)));
     stairs.forEach(st => Array.from({ length: 8 }, (_, k) => drawCube(st.x, 0.25 + k * 0.5, st.z1 - k * ((st.z1 - st.z2) / 8), 2.4, 0.5, 1.0, 0, new Array(0.46, 0.28, 0.15))));
     props.forEach(pr => drawCube(pr.x, pr.y, pr.z, pr.sx, pr.sy, pr.sz, 0, pr.col));
-    trees.forEach(t => { drawCube(t.x, 2.25, t.z, 1.0, 4.5, 1.0, 0, new Array(0.36, 0.22, 0.13)); drawSphere(t.x, 5.6, t.z, 5.2, 3.4, 5.2, 0.4, new Array(0.08, 0.28, 0.13)); });
+    trees.forEach(t => { drawCyl(t.x, 2.25, t.z, 0.9, 4.5, 0.9, 0, new Array(0.36, 0.22, 0.13)); drawWedge(t.x, 5.6, t.z, 4.8, 3.4, 4.8, 0.4, new Array(0.08, 0.28, 0.13)); });
     cars.forEach(car => { if (car.hp > 0) drawCarGL(car); });
     if (portal && gameMode !== "pvp") drawGreenBottlePortal(portal.x, portal.z, portal.open);
-    if (vortexOrb) drawSphere(vortexOrb.x, 2.0, vortexOrb.z, 2.8, 2.8, 2.8, Date.now() * 0.015, new Array(0.65, 0.1, 1.0));
-    pickups.forEach(p => { if (!p.done) { const pc = p.type === "shield" ? new Array(0, 0.85, 1) : (p.type === "boost" || p.type === "token") ? new Array(1, 0.84, 0) : new Array(1, 0.56, 0); drawSphere(p.x, 0.85, p.z, 1.1, 0.9, 1.1, Date.now() * 0.003, pc); } });
+    if (vortexOrb) drawCyl(vortexOrb.x, 2.0, vortexOrb.z, 2.8, 2.8, 2.8, Date.now() * 0.015, new Array(0.65, 0.1, 1.0));
+    pickups.forEach(p => { if (!p.done) { const pc = p.type === "shield" ? new Array(0, 0.85, 1) : (p.type === "boost" || p.type === "token") ? new Array(1, 0.84, 0) : new Array(1, 0.56, 0); drawCube(p.x, 0.85, p.z, 1.0, 0.85, 1.0, Date.now() * 0.003, pc); } });
     if (storyActive || glidingActive) drawBattleBusGL(px - 8.5, 48.0, pz - 8.0);
     if (glidingActive) drawGliderGL(px, py + 1.0, pz, mySkinId);
     if ((viewMode === 2 || storyActive || glidingActive) && !inCar) { const showEmote = storyActive ? (1 + (Math.floor(Date.now() / 1400) % 4)) : myEmote; drawRiggedGL(px, pz, "mate", 1.0, 0, Math.max(0, py - 1.75), storyActive ? -yaw : (Math.PI - yaw), mySkinId, showEmote); const sp = project3DToScreen(px, py + 1.45, pz, camX, camY, camZ); if (sp) { tagCtx.fillStyle = "#00ff88"; tagCtx.font = "bold 13px Courier New"; tagCtx.textAlign = "center"; tagCtx.fillText(myName + " (SKIN #" + mySkinId + ")", sp.x, sp.y); } }
     Object.values(remotePlayers).forEach(rp => { if (rp.carIdx >= 0 && cars.at(rp.carIdx)) { const vc = cars.at(rp.carIdx); vc.x = rp.x; vc.z = rp.z; vc.rot = rp.carRot || 0; vc.turretRot = rp.yaw || 0; drawCarGL(vc); } else { drawRiggedGL(rp.x, rp.z, "mate", 1.0, 0, Math.max(0, rp.y - 1.75), Math.PI - rp.yaw, rp.skin, rp.emote); } const sp = project3DToScreen(rp.x, rp.y + (rp.carIdx >= 0 ? 2.2 : 1.45), rp.z, camX, camY, camZ); if (sp) { tagCtx.fillStyle = "#00e5ff"; tagCtx.font = "bold 14px Courier New"; tagCtx.textAlign = "center"; tagCtx.fillText((rp.name || "ALLY") + (rp.carIdx >= 0 ? " (DRIVING)" : ""), sp.x, sp.y); } });
     enemies.forEach(e => drawRiggedGL(e.x, e.z, e.zType, e.isTitan ? 2.7 : e.isBoss ? 1.8 : 1.0, e.phase));
     if (tankBoss) drawTankGL(tankBoss); if (tgBoss) drawRiggedGL(tgBoss.x, tgBoss.z, "tg", 1.35, 0);
-    bullets.forEach(b => drawSphere(b.x, b.y, b.z, b.isShell ? 0.58 : 0.24, b.isShell ? 0.58 : 0.24, b.isShell ? 0.58 : 0.24, 0, b.isShell ? new Array(1, 0.35, 0.05) : b.isLaser ? new Array(0, 0.9, 1) : new Array(1, 0.85, 0.1)));
-    tankShells.forEach(sh => drawSphere(sh.x, sh.y, sh.z, 0.58, 0.58, 0.58, 0, new Array(1, 0.25, 0)));
+    bullets.forEach(b => drawCube(b.x, b.y, b.z, b.isShell ? 0.58 : 0.22, b.isShell ? 0.58 : 0.22, b.isShell ? 0.58 : 0.22, 0, b.isShell ? new Array(1, 0.35, 0.05) : b.isLaser ? new Array(0, 0.9, 1) : new Array(1, 0.85, 0.1)));
+    tankShells.forEach(sh => drawCube(sh.x, sh.y, sh.z, 0.58, 0.58, 0.58, 0, new Array(1, 0.25, 0)));
     drawFirstPersonGun();
   } else {
     const sc = 14, cx = c2d.width / 2, cy = c2d.height / 2; ctx2.fillStyle = mapTheme.isColosseum ? "#5c4a2e" : (horrorMod ? "#07120a" : "#132217"); ctx2.fillRect(0, 0, c2d.width, c2d.height);
